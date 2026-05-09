@@ -49,6 +49,7 @@ public class Produk {
         return new Produk(data.getNama(), data.getKode(), data.getSatuan(), data.getDeskripsi(), data.getFoto());
     }
 
+
     public void update(ProdukData dataBaru) {
         this.nama = dataBaru.getNama();
         this.kode = dataBaru.getKode();
