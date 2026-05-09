@@ -196,6 +196,26 @@ public class TargetProduksi {
         return getRealisasi() >= jumlahTarget;
     }
 
+    // 11. getAktifPadaTanggal() : untuk mengambil target yang sedang berjalan di tanggal tertentu
+    public static TargetProduksi getAktifPadaTanggal(int idProduk, LocalDate tanggal) {
+        String sql = "SELECT * FROM target_produksi WHERE id_produk = ? AND ? BETWEEN periode_awal AND periode_akhir LIMIT 1";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, idProduk);
+            stmt.setObject(2, tanggal);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return mapRow(rs);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error getAktifPadaTanggal: " + e.getMessage());
+        }
+        return null;
+    }
+
     // Helper
     private static TargetProduksi mapRow(ResultSet rs) throws SQLException {
         TargetProduksi t = new TargetProduksi();
@@ -221,4 +241,16 @@ public class TargetProduksi {
     public void setPeriodeAwal(LocalDate v)   { this.periodeAwal = v; }
     public void setPeriodeAkhir(LocalDate v)  { this.periodeAkhir = v; }
     public void setJumlahTarget(int v)        { this.jumlahTarget = v; }
-    public void setK
+    public void setKeterangan(String v)       { this.keterangan = v; }
+
+    // toString
+    @Override
+    public String toString() {
+        return "TargetProduksi{" +
+                "idTarget=" + idTarget +
+                ", idProduk=" + idProduk +
+                ", periode=" + periodeAwal + " s/d " + periodeAkhir +
+                ", target=" + jumlahTarget +
+                '}';
+    }
+}

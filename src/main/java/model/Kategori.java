@@ -7,42 +7,69 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class Kategori {
+    // Fields
     private int idKategori;
     private String namaKategori;
 
+    // Constructor
     public Kategori(int idKategori, String namaKategori) {
         this.idKategori = idKategori;
         this.namaKategori = namaKategori;
     }
 
-    public int getIdKategori() { return idKategori; }
-    public String getNamaKategori() { return namaKategori; }
+    // 1. getById() : untuk mengambil data kategori berdasarkan ID
+    public static Kategori getById(int id) {
+        String sql = "SELECT * FROM kategori WHERE id_kategori = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-    public static Kategori create(String nama, String deskripsi) {
-        String sql = "INSERT INTO kategori (nama_kategori) VALUES (?) RETURNING id_kategori";
-        try {
-            Connection conn = DBConnection.getConnection();
-            PreparedStatement stmt = conn.prepareStatement(sql);
-            stmt.setString(1, nama);
-            ResultSet rs = stmt.executeQuery();
-            if (rs.next()) {
-                return new Kategori(rs.getInt("id_kategori"), nama);
+            stmt.setInt(1, id);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return new Kategori(
+                            rs.getInt("id_kategori"),
+                            rs.getString("nama_kategori")
+                    );
+                }
             }
         } catch (SQLException e) {
-            System.out.println("Error create kategori: " + e.getMessage());
+            System.err.println("Error getById kategori: " + e.getMessage());
         }
         return null;
     }
 
+    // 2. create() : untuk membuat dan menyimpan kategori baru ke database
+    public static Kategori create(String nama, String deskripsi) {
+        String sql = "INSERT INTO kategori (nama_kategori) VALUES (?) RETURNING id_kategori";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, nama);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return new Kategori(rs.getInt("id_kategori"), nama);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error create kategori: " + e.getMessage());
+        }
+        return null;
+    }
+
+    // 3. delete() : untuk menghapus kategori dari database berdasarkan nama
     public void delete(String nama) {
         String sql = "DELETE FROM kategori WHERE nama_kategori = ?";
-        try {
-            Connection conn = DBConnection.getConnection();
-            PreparedStatement stmt = conn.prepareStatement(sql);
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
             stmt.setString(1, nama);
             stmt.executeUpdate();
         } catch (SQLException e) {
-            System.out.println("Error delete kategori: " + e.getMessage());
+            System.err.println("Error delete kategori: " + e.getMessage());
         }
     }
+
+    // Getters
+    public int getIdKategori() { return idKategori; }
+    public String getNamaKategori() { return namaKategori; }
 }
