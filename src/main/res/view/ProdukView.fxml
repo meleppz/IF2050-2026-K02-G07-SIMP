@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.Insets?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="view.ProdukViewController"
+            style="-fx-background-color: #0a1f1f; -fx-font-family: 'Plus Jakarta Sans';">
+
+    <!-- HEADER -->
+    <top>
+        <HBox alignment="CENTER_LEFT" spacing="16"
+              style="-fx-padding: 24 32 16 32;">
+            <Label text="Produk"
+                   style="-fx-text-fill: #00e5a0; -fx-font-size: 28; -fx-font-weight: bold;"/>
+            <Button text="Tambah Produk Baru"
+                    fx:id="btnTambahProduk"
+                    onAction="#klikTambahProduk"
+                    style="-fx-background-color: #00e5a0; -fx-text-fill: #0a1f1f; -fx-font-weight: bold; -fx-background-radius: 8; -fx-padding: 8 20;"/>
+        </HBox>
+    </top>
+
+    <!-- CONTENT -->
+    <center>
+        <VBox spacing="16" style="-fx-padding: 0 32 32 32;">
+
+            <!-- SEARCH BAR -->
+            <TextField fx:id="fieldCariProduk"
+                       promptText="Cari Produk"
+                       onKeyReleased="#cariProduk"
+                       style="-fx-background-color: #132929; -fx-text-fill: white; -fx-prompt-text-fill: #5a8a8a; -fx-background-radius: 8; -fx-padding: 12 16; -fx-font-size: 14;"/>
+
+            <!-- EMPTY STATE (ditampilkan kalau produk kosong) -->
+            <VBox fx:id="emptyState" alignment="CENTER" spacing="16"
+                  style="-fx-padding: 80 0;">
+                <Label text="Uh Oh"
+                       style="-fx-text-fill: white; -fx-font-size: 22; -fx-font-weight: bold;"/>
+                <Label text="Produk masih kosong, ayo tambahkan terlebih dahulu"
+                       style="-fx-text-fill: #5a8a8a; -fx-font-size: 14;"/>
+                <Button text="Tambah Produk"
+                        onAction="#klikTambahProduk"
+                        style="-fx-background-color: #00e5a0; -fx-text-fill: #0a1f1f; -fx-font-weight: bold; -fx-background-radius: 8; -fx-padding: 12 40; -fx-font-size: 14;"/>
+            </VBox>
+
+            <!-- GRID PRODUK (ditampilkan kalau ada produk) -->
+            <ScrollPane fx:id="scrollProduk" fitToWidth="true"
+                        style="-fx-background: transparent; -fx-background-color: transparent;">
+                <content>
+                    <FlowPane fx:id="gridProduk" hgap="16" vgap="16"/>
+                </content>
+            </ScrollPane>
+
+        </VBox>
+    </center>
+
+</BorderPane>
