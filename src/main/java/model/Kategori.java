@@ -5,6 +5,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Kategori {
     // Fields
@@ -67,6 +69,24 @@ public class Kategori {
         } catch (SQLException e) {
             System.err.println("Error delete kategori: " + e.getMessage());
         }
+    }
+
+    public static List<Kategori> getAll() {
+        List<Kategori> list = new ArrayList<>();
+        String sql = "SELECT * FROM kategori ORDER BY nama_kategori ASC";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                list.add(new Kategori(
+                        rs.getInt("id_kategori"),
+                        rs.getString("nama_kategori")
+                ));
+            }
+        } catch (SQLException e) {
+            System.err.println("Error getAll kategori: " + e.getMessage());
+        }
+        return list;
     }
 
     // Getters
