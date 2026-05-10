@@ -16,6 +16,15 @@ public class MainApp extends Application {
         stage.setScene(scene);
         Font.loadFont(getClass().getResourceAsStream("/fonts/PlusJakartaSans-Regular.ttf"), 14);
         Font.loadFont(getClass().getResourceAsStream("/fonts/PlusJakartaSans-Bold.ttf"), 14);
+        try {
+            java.sql.Connection conn = util.DBConnection.getConnection();
+            System.out.println("=== DB INFO ===");
+            System.out.println("URL: " + conn.getMetaData().getURL());
+            System.out.println("User: " + conn.getMetaData().getUserName());
+            System.out.println("Connected: " + !conn.isClosed());
+        } catch (Exception e) {
+            System.out.println("DB Error: " + e.getMessage());
+        }
         stage.show();
     }
 

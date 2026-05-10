@@ -33,6 +33,15 @@
                 style="-fx-background-color: #1e3a3a; -fx-text-fill: white; -fx-background-radius: 8; -fx-padding: 10 20;"/>
     </HBox>
 
+    <!-- KODE PRODUK -->
+    <VBox spacing="6">
+        <Label text="Kode Produk"
+               style="-fx-text-fill: white; -fx-font-size: 13; -fx-font-family: 'Plus Jakarta Sans';"/>
+        <TextField fx:id="fieldKodeProduk"
+                   promptText="Kode produk..."
+                   style="-fx-background-color: #132929; -fx-text-fill: white; -fx-prompt-text-fill: #5a8a8a; -fx-background-radius: 8; -fx-padding: 10 14;"/>
+    </VBox>
+
     <HBox spacing="12">
         <VBox spacing="6" HBox.hgrow="ALWAYS">
             <Label text="Nama Produk"

@@ -11,6 +11,7 @@ import javafx.stage.FileChooser;
 import model.Produk;
 import model.ProdukData;
 import model.TargetProduksi;
+import model.Kategori;
 
 import java.io.File;
 import java.io.IOException;
@@ -36,6 +37,7 @@ public class ProdukViewController {
     @FXML private ComboBox<String> combKategori;
     @FXML private TextField fieldDeskripsi;
     @FXML private TextField fieldTargetPerBulan;
+    @FXML private TextField fieldKodeProduk;
 
     // — komponen dari DetailProdukDialog.fxml —
     @FXML private ImageView detailFoto;
@@ -221,13 +223,18 @@ public class ProdukViewController {
             VBox formContent = loader.load();
 
             labelJudulForm.setText(judul);
+            combKategori.setEditable(true);
             combKategori.getItems().clear();
-            combKategori.getItems().addAll("Minuman", "Makanan", "Lainnya");
+            List<Kategori> listKategori = Kategori.getAll();
+            for (Kategori kat : listKategori) {
+                combKategori.getItems().add(kat.getNamaKategori());
+            }
 
             // kalau mode edit, isi form dengan data existing
             if (idProdukSedangDiedit != null) {
                 Produk produk = produkController.getProdukById(idProdukSedangDiedit);
                 if (produk != null) {
+                    fieldKodeProduk.setText(produk.getKode() != null ? produk.getKode() : "");
                     fieldNamaProduk.setText(produk.getNama());
                     fieldSatuan.setText(produk.getSatuan());
                     fieldDeskripsi.setText(produk.getDeskripsi() != null ? produk.getDeskripsi() : "");
@@ -275,15 +282,50 @@ public class ProdukViewController {
 
     @FXML
     public void simpanProduk() {
-        if (!konfirmasiAksi("Simpan perubahan?")) return;
+        System.out.println("=== simpanProduk() dipanggil ===");
+
+        if (!konfirmasiAksi("Simpan perubahan?")) {
+            System.out.println("❌ Dibatalkan oleh user");
+            return;
+        }
+
+        String kategoriInput = combKategori.getEditor().getText().trim();
+        System.out.println("Kategori input: '" + kategoriInput + "'");
+
+        if (kategoriInput.isEmpty()) {
+            System.out.println("❌ Kategori kosong, berhenti");
+            tampilkanPesan("Kategori wajib diisi!");
+            return;
+        }
 
         ProdukData data = ambilInputProduk();
-        if (data == null) return;
+        if (data == null) {
+            System.out.println("❌ ambilInputProduk() return null, berhenti");
+            return;
+        }
 
-        if (idProdukSedangDiedit == null) {
-            produkController.tambahProduk(data, 1);
-        } else {
-            produkController.editProduk(idProdukSedangDiedit, data, null);
+        System.out.println("Data produk:");
+        System.out.println("  nama    : " + data.getNama());
+        System.out.println("  satuan  : " + data.getSatuan());
+        System.out.println("  deskripsi: " + data.getDeskripsi());
+        System.out.println("  foto    : " + data.getFoto());
+        System.out.println("  mode    : " + (idProdukSedangDiedit == null ? "TAMBAH" : "EDIT id=" + idProdukSedangDiedit));
+
+        try {
+            if (idProdukSedangDiedit == null) {
+                Produk hasil = produkController.tambahProduk(data, kategoriInput);
+                if (hasil != null) {
+                    System.out.println("✓ Produk tersimpan, id: " + hasil.getIdProduk());
+                } else {
+                    System.out.println("❌ tambahProduk() return null");
+                }
+            } else {
+                boolean berhasil = produkController.editProduk(idProdukSedangDiedit, data, kategoriInput);
+                System.out.println(berhasil ? "✓ Produk berhasil diedit" : "❌ editProduk() return false");
+            }
+        } catch (Exception e) {
+            System.out.println("❌ Exception: " + e.getMessage());
+            e.printStackTrace();
         }
 
         fieldNamaProduk.getScene().getWindow().hide();
@@ -292,17 +334,17 @@ public class ProdukViewController {
 
     public ProdukData ambilInputProduk() {
         String nama = fieldNamaProduk.getText().trim();
-        String kategori = combKategori.getValue();
+        String kode = fieldKodeProduk.getText().trim();
         String deskripsi = fieldDeskripsi.getText().trim();
         String satuan = fieldSatuan.getText().trim();
         String foto = pathFotoTerpilih != null ? pathFotoTerpilih : "";
 
-        if (nama.isEmpty() || kategori == null || satuan.isEmpty()) {
-            tampilkanPesan("Nama, kategori, dan satuan wajib diisi!");
+        if (nama.isEmpty() || kode.isEmpty() || satuan.isEmpty()) {
+            tampilkanPesan("Nama, kode, dan satuan wajib diisi!");
             return null;
         }
 
-        return new ProdukData(nama, "", kategori, satuan, deskripsi, foto);
+        return new ProdukData(nama, kode, "", satuan, deskripsi, foto);
     }
 
     // =========================================================
