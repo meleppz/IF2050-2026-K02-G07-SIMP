@@ -119,8 +119,39 @@ public class StatistikService {
     //    Mengembalikan list Map berisi tanggal, total produksi, total defect
     //    yang sudah diurutkan per tanggal (cocok untuk grafik line chart)
     // =========================================================
-    private List<Map<String, Object>> kalkulasiTren(LocalDate dari, LocalDate sampai) {
+    private List<Map<String, Object>> kalkulasiTrenByRange(LocalDate dari, LocalDate sampai) {
         List<ProduksiHarian> data = ProduksiHarian.getByDateRange(dari, sampai);
+        List<Map<String, Object>> tren = new ArrayList<>();
+
+        if (data == null || data.isEmpty()) return tren;
+
+        // Kelompokkan per tanggal
+        Map<LocalDate, List<ProduksiHarian>> perTanggal = data.stream()
+                .collect(Collectors.groupingBy(ProduksiHarian::getTanggalProduksi));
+
+        // Urutkan tanggal dari yang terlama
+        List<LocalDate> tanggalUrut = new ArrayList<>(perTanggal.keySet());
+        Collections.sort(tanggalUrut);
+
+        for (LocalDate tanggal : tanggalUrut) {
+            List<ProduksiHarian> listHari = perTanggal.get(tanggal);
+
+            int totalAktual = listHari.stream().mapToInt(ProduksiHarian::getJumlahAktual).sum();
+            int totalDefect = listHari.stream().mapToInt(ProduksiHarian::getJumlahDefect).sum();
+            int totalBersih = totalAktual - totalDefect;
+
+            Map<String, Object> poin = new HashMap<>();
+            poin.put("tanggal", tanggal.toString());
+            poin.put("totalAktual", totalAktual);
+            poin.put("totalDefect", totalDefect);
+            poin.put("totalBersih", totalBersih);
+            tren.add(poin);
+        }
+
+        return kalkulasiTren(data);
+    }
+
+    private List<Map<String, Object>> kalkulasiTren(List<ProduksiHarian> data) {
         List<Map<String, Object>> tren = new ArrayList<>();
 
         if (data == null || data.isEmpty()) return tren;
@@ -175,7 +206,7 @@ public class StatistikService {
      * Ambil data tren produksi untuk grafik
      */
     public List<Map<String, Object>> getTren(LocalDate dari, LocalDate sampai) {
-        return kalkulasiTren(dari, sampai);
+        return kalkulasiTrenByRange(dari, sampai);
     }
 
     /**
@@ -217,6 +248,43 @@ public class StatistikService {
         return ringkasan;
     }
 
+    public List<Map<String, Object>> getTrenDariData(List<ProduksiHarian> data) {
+        return kalkulasiTren(data); // tinggal panggil private method yang sudah ada
+    }
+
+    public Map<String, Object> getRingkasanDariData(List<ProduksiHarian> data) {
+        // sama seperti getRingkasan() tapi tanpa query DB
+        Map<String, Object> ringkasan = new HashMap<>();
+        if (data == null || data.isEmpty()) {
+            ringkasan.put("totalAktual", 0);
+            ringkasan.put("totalDefect", 0);
+            ringkasan.put("totalBersih", 0);
+            ringkasan.put("rataRataHarian", 0.0);
+            ringkasan.put("persentaseDefect", 0.0);
+            return ringkasan;
+        }
+        int totalAktual = data.stream().mapToInt(ProduksiHarian::getJumlahAktual).sum();
+        int totalDefect = data.stream().mapToInt(ProduksiHarian::getJumlahDefect).sum();
+        int totalBersih = totalAktual - totalDefect;
+        long jumlahHari = data.stream().map(ProduksiHarian::getTanggalProduksi).distinct().count();
+        double rataRata = (jumlahHari > 0) ? (double) totalBersih / jumlahHari : 0;
+        double persentaseDefect = (totalAktual > 0) ? (totalDefect / (double) totalAktual) * 100 : 0;
+        ringkasan.put("totalAktual", totalAktual);
+        ringkasan.put("totalDefect", totalDefect);
+        ringkasan.put("totalBersih", totalBersih);
+        ringkasan.put("rataRataHarian", Math.round(rataRata * 100.0) / 100.0);
+        ringkasan.put("persentaseDefect", Math.round(persentaseDefect * 100.0) / 100.0);
+        ringkasan.put("jumlahHari", jumlahHari);
+        return ringkasan;
+    }
+
+    public Map<String, Object> getProduksiTertinggiDariData(List<ProduksiHarian> data) {
+        return countProduksiTertinggi(data);
+    }
+
+    public Map<String, Object> getDefectTerbanyakDariData(List<ProduksiHarian> data) {
+        return countDefectTerbanyak(data);
+    }
     // Getters & Setters
     public String getKriteriaUrutan() { return kriteriaUrutan; }
     public void setKriteriaUrutan(String kriteriaUrutan) { this.kriteriaUrutan = kriteriaUrutan; }

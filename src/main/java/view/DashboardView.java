@@ -9,6 +9,8 @@ import javafx.scene.layout.*;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import service.StatistikService;
+import controller.ProdukController;
+import model.ProduksiHarian;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -37,12 +39,14 @@ public class DashboardView extends VBox {
 
     // Service
     private StatistikService statistikService;
+    private ProdukController produkController;
 
     // =========================================================
     // Constructor
     // =========================================================
     public DashboardView() {
         this.statistikService = new StatistikService();
+        this.produkController = new ProdukController();
         this.pilihanPeriode   = "7 Hari Terakhir";
         this.rentangWaktu     = "minggu";
         this.tipeGrafik       = "line";
@@ -62,11 +66,12 @@ public class DashboardView extends VBox {
         LocalDate sampai  = range[1];
 
         try {
-            // Ambil data dari service
-            Map<String, Object> ringkasan        = statistikService.getRingkasan(dari, sampai);
-            Map<String, Object> produksiTertinggi = statistikService.getProduksiTertinggi(dari, sampai);
-            Map<String, Object> defectTerbanyak   = statistikService.getDefectTerbanyak(dari, sampai);
-            List<Map<String, Object>> tren         = statistikService.getTren(dari, sampai);
+            // Ambil data mentah dari controller, lalu proses di StatistikService
+            List<ProduksiHarian> dataProduksi = produkController.getProduksiHarianByDateRange(dari, sampai);
+            List<Map<String, Object>> tren = statistikService.getTrenDariData(dataProduksi);
+            Map<String, Object> ringkasan = statistikService.getRingkasanDariData(dataProduksi);
+            Map<String, Object> produksiTertinggi = statistikService.getProduksiTertinggiDariData(dataProduksi);
+            Map<String, Object> defectTerbanyak = statistikService.getDefectTerbanyakDariData(dataProduksi);
 
             // Update card summary
             lblTotalProduksi.setText(String.valueOf(ringkasan.get("totalBersih")));
@@ -305,6 +310,7 @@ public class DashboardView extends VBox {
             default                  -> "minggu";
         };
     }
+
 
     // Getters & Setters
     public String getRentangWaktu()               { return rentangWaktu; }
