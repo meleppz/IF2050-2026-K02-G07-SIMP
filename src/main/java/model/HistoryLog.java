@@ -23,36 +23,36 @@ public class HistoryLog {
         this.keterangan = keterangan;
     }
 
-    public int getIdHistori() { return idHistori; }
-    public Produk getProduk() { return produk; }
-    public String getAksi() { return aksi; }
-    public LocalDateTime getTimestamp() { return timestamp; }
-    public String getKeterangan() { return keterangan; }
+    public int getIdHistori()          { return idHistori; }
+    public Produk getProduk()          { return produk; }
+    public String getAksi()            { return aksi; }
+    public LocalDateTime getTimestamp(){ return timestamp; }
+    public String getKeterangan()      { return keterangan; }
 
     public static HistoryLog catatAksi(String aksi, Produk produk) {
-        String sql = "INSERT INTO history_log (id_produk, aksi, timestamp, keterangan) " +
-                "VALUES (?, ?, ?, ?)";
-        try {
-            Connection conn = DBConnection.getConnection();
-            PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+        String sql = "INSERT INTO history_log (id_produk, aksi, timestamp, keterangan) VALUES (?, ?, ?, ?)";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+
             stmt.setInt(1, produk.getIdProduk());
             stmt.setString(2, aksi);
             stmt.setObject(3, LocalDateTime.now());
             stmt.setString(4, aksi + " produk " + produk.getNama());
             stmt.executeUpdate();
 
-            ResultSet rs = stmt.getGeneratedKeys();
-            if (rs.next()) {
-                return new HistoryLog(
-                        rs.getInt(1),
-                        produk,
-                        aksi,
-                        LocalDateTime.now(),
-                        aksi + " produk " + produk.getNama()
-                );
+            try (ResultSet rs = stmt.getGeneratedKeys()) {
+                if (rs.next()) {
+                    return new HistoryLog(
+                            rs.getInt(1),
+                            produk,
+                            aksi,
+                            LocalDateTime.now(),
+                            aksi + " produk " + produk.getNama()
+                    );
+                }
             }
         } catch (SQLException e) {
-            System.out.println("Error catat aksi: " + e.getMessage());
+            System.err.println("Error catat aksi: " + e.getMessage());
         }
         return null;
     }

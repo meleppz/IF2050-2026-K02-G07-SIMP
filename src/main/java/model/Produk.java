@@ -102,7 +102,8 @@ public class Produk {
         this.foto = dataBaru.getFoto();
         this.updatedAt = LocalDateTime.now();
 
-        String sql = "UPDATE produk SET nama=?, kode=?, satuan=?, deskripsi=?, foto=?, updated_at=? WHERE id_produk=?";
+        // Tambahkan id_kategori=? di query SQL
+        String sql = "UPDATE produk SET nama=?, kode=?, satuan=?, deskripsi=?, foto=?, updated_at=?, id_kategori=? WHERE id_produk=?";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
@@ -112,7 +113,10 @@ public class Produk {
             stmt.setString(4, this.deskripsi);
             stmt.setString(5, this.foto);
             stmt.setObject(6, this.updatedAt);
-            stmt.setInt(7, this.idProduk);
+            // Masukkan ID Kategori (ambil dari objek kategori yang sudah nempel di Produk)
+            stmt.setInt(7, (this.kategori != null) ? this.kategori.getIdKategori() : 0);
+            stmt.setInt(8, this.idProduk);
+
             stmt.executeUpdate();
         } catch (SQLException e) {
             System.err.println("Error update produk: " + e.getMessage());
