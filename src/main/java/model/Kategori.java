@@ -89,6 +89,32 @@ public class Kategori {
         return list;
     }
 
+    // Method untuk mencari kategori berdasarkan nama
+    public static Kategori getByName(String nama) {
+        String sql = "SELECT * FROM kategori WHERE nama_kategori = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, nama);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return new Kategori(rs.getInt("id_kategori"), rs.getString("nama_kategori"));
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error getByName kategori: " + e.getMessage());
+        }
+        return null;
+    }
+
+    // Method sakti: Cari kalau ada, buat kalau tidak ada
+    public static Kategori getOrCreate(String nama) {
+        Kategori existing = getByName(nama);
+        if (existing != null) return existing;
+
+        // Kalau tidak ada, panggil method create yang sudah kamu punya
+        return create(nama, "");
+    }
+
     // Getters
     public int getIdKategori() { return idKategori; }
     public String getNamaKategori() { return namaKategori; }

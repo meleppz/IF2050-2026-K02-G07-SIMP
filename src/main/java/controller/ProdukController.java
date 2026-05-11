@@ -21,30 +21,28 @@ public class ProdukController {
         return Produk.getById(idProduk);
     }
 
-    public Produk tambahProduk(ProdukData data, int idKategori) {
+    public Produk tambahProduk(ProdukData data, String namaKategori) {
         Produk produk = Produk.create(data);
-        Kategori kategori = Kategori.getById(idKategori);
-        if (kategori != null) {
-            produk.setKategori(kategori);
-        }
+
+        // Gunakan logic dinamis: ambil objek Kategori berdasarkan String
+        Kategori kat = Kategori.getOrCreate(namaKategori);
+        produk.setKategori(kat);
+
         produk.save();
-        HistoryLog.catatAksi("CREATE", produk);
         return produk;
     }
 
-    public boolean editProduk(int idProduk, ProdukData data, Integer idKategori) {
+    public boolean editProduk(int idProduk, ProdukData data, String namaKategori) {
         Produk produk = Produk.getById(idProduk);
-        if (produk == null) {
-            return false;
+        if (produk == null) return false;
+
+        // Update kategori jika ada input
+        if (namaKategori != null && !namaKategori.isEmpty()) {
+            Kategori kat = Kategori.getOrCreate(namaKategori);
+            produk.setKategori(kat);
         }
-        if (idKategori != null) {
-            Kategori kategori = Kategori.getById(idKategori);
-            if (kategori != null) {
-                produk.setKategori(kategori);
-            }
-        }
+
         produk.update(data);
-        HistoryLog.catatAksi("UPDATE", produk);
         return true;
     }
 
