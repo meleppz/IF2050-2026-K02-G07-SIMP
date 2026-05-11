@@ -11,17 +11,14 @@ public class DBConnection {
     private static final String USER = "postgres";
     private static final String PASSWORD = dotenv.get("DB_PASSWORD");
 
-    private static Connection connection = null;
-
-    public static Connection getConnection() {
-        if (connection == null) {
-            try {
-                connection = DriverManager.getConnection(URL, USER, PASSWORD);
-                System.out.println("Koneksi berhasil!");
-            } catch (SQLException e) {
-                System.out.println("Koneksi gagal: " + e.getMessage());
-            }
+    public static Connection getConnection() throws SQLException {
+        try {
+            Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+            System.out.println("✓ Koneksi berhasil");
+            return conn;
+        } catch (SQLException e) {
+            System.out.println("❌ Koneksi gagal: " + e.getMessage());
+            throw e;
         }
-        return connection;
     }
 }

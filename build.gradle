@@ -1,6 +1,8 @@
 plugins {
     id 'java'
     id 'application'
+    // 1. Update versi plugin ke yang lebih stabil
+    id 'org.openjfx.javafxplugin' version '0.0.13'
 }
 
 group = 'simp'
@@ -15,6 +17,22 @@ dependencies {
     implementation 'io.github.cdimascio:dotenv-java:3.0.0'
 }
 
+javafx {
+    // 2. Samakan dengan versi JDK kamu (JDK 24)
+    version = "24"
+    modules = ['javafx.controls', 'javafx.fxml']
+}
+
+sourceSets {
+    main {
+        resources {
+            // Memastikan resource terbaca
+            srcDirs = ['src/main/res']
+        }
+    }
+}
+
+// 3. Hapus bagian jvmArgs manual tadi, biarkan plugin yang bekerja
 application {
-    mainClass = 'Main'
+    mainClass = 'MainApp'
 }

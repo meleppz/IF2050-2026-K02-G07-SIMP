@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
+
+<VBox xmlns:fx="http://javafx.com/fxml"
+      spacing="16"
+      style="-fx-background-color: #0d2626; -fx-padding: 24; -fx-background-radius: 12; -fx-font-family: 'Plus Jakarta Sans';"
+      prefWidth="560">
+
+    <!-- HEADER -->
+    <Label text="Detail Produk"
+           style="-fx-text-fill: white; -fx-font-size: 20; -fx-font-weight: bold;"/>
+
+    <Separator style="-fx-background-color: #1e3a3a;"/>
+
+    <!-- KONTEN: FOTO + INFO -->
+    <HBox spacing="24" alignment="TOP_LEFT">
+
+        <!-- FOTO -->
+        <StackPane prefWidth="180" prefHeight="180"
+                   style="-fx-background-color: #c0c0c0; -fx-background-radius: 8;">
+            <Label fx:id="labelPlaceholderDetail"
+                   text="🖼"
+                   style="-fx-font-size: 48; -fx-text-fill: #888888;"/>
+            <ImageView fx:id="detailFoto"
+                       fitWidth="180" fitHeight="180"
+                       preserveRatio="true"
+                       visible="false"/>
+        </StackPane>
+
+        <!-- INFO -->
+        <VBox spacing="8" HBox.hgrow="ALWAYS">
+            <Label fx:id="detailNama"
+                   text="Nama Produk"
+                   style="-fx-text-fill: white; -fx-font-size: 20; -fx-font-weight: bold;"/>
+            <Label fx:id="detailKode"
+                   text="ID123456789"
+                   style="-fx-text-fill: #5a8a8a; -fx-font-size: 13;"/>
+
+            <Label text="Deskripsi"
+                   style="-fx-text-fill: #5a8a8a; -fx-font-size: 12; -fx-padding: 8 0 0 0;"/>
+            <Label fx:id="detailDeskripsi"
+                   text="-"
+                   wrapText="true"
+                   style="-fx-text-fill: white; -fx-font-size: 13;"/>
+
+            <Label text="Target Produksi"
+                   style="-fx-text-fill: #5a8a8a; -fx-font-size: 12; -fx-padding: 8 0 0 0;"/>
+            <Label fx:id="detailTarget"
+                   text="-"
+                   style="-fx-text-fill: white; -fx-font-size: 13;"/>
+
+            <Label text="Performa Bulan Ini"
+                   style="-fx-text-fill: #5a8a8a; -fx-font-size: 12; -fx-padding: 8 0 0 0;"/>
+            <Label fx:id="detailPerforma"
+                   text="-"
+                   style="-fx-text-fill: white; -fx-font-size: 13;"/>
+        </VBox>
+    </HBox>
+
+    <!-- TOMBOL EDIT & HAPUS (pojok kanan bawah) -->
+    <HBox alignment="CENTER_RIGHT" spacing="12">
+        <Button fx:id="btnEditDetail"
+                text="✏"
+                onAction="#klikEditDariDetail"
+                style="-fx-background-color: #00e5a0; -fx-text-fill: #0a1f1f; -fx-font-size: 16; -fx-background-radius: 8; -fx-padding: 10 16;"/>
+        <Button fx:id="btnHapusDetail"
+                text="🗑"
+                onAction="#klikHapusDariDetail"
+                style="-fx-background-color: #1e3a3a; -fx-text-fill: white; -fx-font-size: 16; -fx-background-radius: 8; -fx-padding: 10 16;"/>
+    </HBox>
+
+</VBox>
