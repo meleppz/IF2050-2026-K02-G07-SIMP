@@ -6,11 +6,19 @@ import model.Produk;
 import model.ProdukData;
 import model.ProduksiHarian;
 import model.TargetProduksi;
+import util.Session;
 
 import java.time.LocalDate;
 import java.util.List;
 
 public class ProdukController {
+
+    // ✅ Session untuk logging NIK user
+    private Session session;
+
+    public ProdukController() {
+        this.session = Session.getInstance();
+    }
 
     // =========================================================
     // PRODUK — CORE OPERATIONS
@@ -36,9 +44,9 @@ public class ProdukController {
         boolean berhasil = produk.save();
 
         if (berhasil) {
-            // 4. Catat ke History Log hanya jika simpan berhasil
-            // Pastikan produk.save() sudah mengisi idProduk ke objek produk
-            HistoryLog.catatAksi("CREATE", produk);
+            // 4. ✅ Catat ke History Log dengan NIK user
+            String nik = session.getNikAktif();
+            HistoryLog.catatAksi("CREATE", produk, nik);
             return produk;
         }
 
@@ -59,8 +67,9 @@ public class ProdukController {
         boolean berhasil = produk.update(data);
 
         if (berhasil) {
-            // 3. Catat ke History Log
-            HistoryLog.catatAksi("UPDATE", produk);
+            // 3. ✅ Catat ke History Log dengan NIK user
+            String nik = session.getNikAktif();
+            HistoryLog.catatAksi("UPDATE", produk, nik);
             return true;
         }
 
@@ -86,9 +95,10 @@ public class ProdukController {
                 ProduksiHarian.deleteById(produksi.getIdProduksi());
             }
 
-            // 2. Catat Log SEBELUM produk benar-benar hilang dari tabel
+            // 2. ✅ Catat Log SEBELUM produk benar-benar hilang dari tabel dengan NIK user
             // Ini penting agar informasi produk masih lengkap saat dicatat
-            HistoryLog.catatAksi("DELETE", produk);
+            String nik = session.getNikAktif();
+            HistoryLog.catatAksi("DELETE", produk, nik);
 
             // 3. Hapus produk secara permanen
             return produk.delete();
