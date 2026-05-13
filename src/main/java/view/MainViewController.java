@@ -7,6 +7,10 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
+import javafx.scene.layout.HBox;
 
 import java.io.IOException;
 
@@ -39,7 +43,10 @@ public class MainViewController {
     @FXML
     public void navigasiDashboard() {
         setAktif(btnDashboard);
-        // TODO: load DashboardView
+        DashboardView dashboard = new DashboardView(this);
+        dashboard.prefWidthProperty().bind(contentArea.widthProperty());
+        dashboard.prefHeightProperty().bind(contentArea.heightProperty());
+        contentArea.getChildren().setAll(dashboard);
     }
 
     @FXML
