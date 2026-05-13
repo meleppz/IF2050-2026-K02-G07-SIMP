@@ -9,6 +9,7 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.stage.Stage;
 import model.Pengguna;
+import util.Session;
 
 public class LoginViewController {
 
@@ -48,6 +49,7 @@ public class LoginViewController {
         Pengguna pengguna = authController.login(nik, password);
         if (pengguna != null) {
             System.out.println("✓ Login berhasil: " + pengguna.getNama());
+            Session.getInstance().login(pengguna);
             bukaMainView();
         } else {
             tampilkanPesan("NIK atau password salah, atau akun tidak aktif.");

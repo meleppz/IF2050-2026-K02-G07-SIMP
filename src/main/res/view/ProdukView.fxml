@@ -45,7 +45,9 @@
                 <VBox alignment="CENTER_LEFT" spacing="2">
                     <Label text="Selamat Siang"
                            style="-fx-text-fill: #5a8a8a; -fx-font-size: 11;"/>
-                    <Label text="Lorem Ipsum"
+                    <!-- Tambahkan fx:id="lblNamaPengguna" di sini -->
+                    <Label fx:id="lblNamaPengguna"
+                           text="Lorem Ipsum"
                            style="-fx-text-fill: white; -fx-font-size: 13; -fx-font-weight: bold;"/>
                 </VBox>
             </HBox>

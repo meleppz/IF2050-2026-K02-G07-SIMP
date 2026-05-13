@@ -61,14 +61,31 @@
 
     <!-- TOMBOL EDIT & HAPUS (pojok kanan bawah) -->
     <HBox alignment="CENTER_RIGHT" spacing="12">
+        <!-- Tombol Edit -->
         <Button fx:id="btnEditDetail"
-                text="✏"
                 onAction="#klikEditDariDetail"
-                style="-fx-background-color: #00e5a0; -fx-text-fill: #0a1f1f; -fx-font-size: 16; -fx-background-radius: 8; -fx-padding: 10 16;"/>
+                style="-fx-background-color: transparent; -fx-cursor: hand; -fx-padding: 0;">
+            <graphic>
+                <ImageView fitWidth="32" fitHeight="32" preserveRatio="true">
+                    <image>
+                        <Image url="@../images/icon_edit.png"/>
+                    </image>
+                </ImageView>
+            </graphic>
+        </Button>
+
+        <!-- Tombol Hapus -->
         <Button fx:id="btnHapusDetail"
-                text="🗑"
                 onAction="#klikHapusDariDetail"
-                style="-fx-background-color: #1e3a3a; -fx-text-fill: white; -fx-font-size: 16; -fx-background-radius: 8; -fx-padding: 10 16;"/>
+                style="-fx-background-color: transparent; -fx-cursor: hand; -fx-padding: 4;">
+            <graphic>
+                <ImageView fitWidth="32" fitHeight="32" preserveRatio="true">
+                    <image>
+                        <Image url="@../images/icon_delete.png"/>
+                    </image>
+                </ImageView>
+            </graphic>
+        </Button>
     </HBox>
 
 </VBox>
