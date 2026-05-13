@@ -5,6 +5,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.control.Button;
 import model.Produk;
 import model.TargetProduksi;
 
@@ -19,6 +20,8 @@ public class DetailProdukController {
     @FXML private Label detailDeskripsi;
     @FXML private Label detailTarget;
     @FXML private Label detailPerforma;
+    @FXML private Button btnEditDetail;
+    @FXML private Button btnHapusDetail;
 
     private ProdukController produkController;
     private int idProduk;
@@ -69,4 +72,7 @@ public class DetailProdukController {
     public void klikHapusDariDetail() {
         if (onHapus != null) onHapus.run();
     }
+
+    public Button getBtnEditDetail() { return btnEditDetail; }
+    public Button getBtnHapusDetail() { return btnHapusDetail; }
 }

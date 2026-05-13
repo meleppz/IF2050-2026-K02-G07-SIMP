@@ -12,6 +12,7 @@ import javafx.scene.layout.*;
 import javafx.util.Duration;
 import model.Produk;
 import model.TargetProduksi;
+import util.Session;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -29,17 +30,38 @@ public class ProdukViewController {
     @FXML private ScrollPane scrollProduk;
     @FXML private FlowPane gridProduk;
     @FXML private TextField fieldCariProduk;
+    @FXML private Label lblNamaPengguna;
 
     // — data & controller —
     private ProdukController produkController;
     private List<Produk> daftarProduk;
     private Integer idProdukSedangDiedit = null;
     private Dialog<ButtonType> dialogDetail = null;
+    
+    // ✅ Session untuk permission check
+    private Session session = Session.getInstance();
 
     @FXML
     public void initialize() {
         produkController = new ProdukController();
+
+        setupHeaderUser();
+
         tampilkanListProduk(produkController.getAllProduk());
+    }
+
+    private void setupHeaderUser() {
+        if (session.isLoggedIn()) {
+            // Mengambil peran dari objek Pengguna (misal: "OPERATOR" atau "SUPERVISOR")
+            String peran = session.getPenggunaAktif().getPeran().toString();
+            lblNamaPengguna.setText(peran);
+
+            // Opsional: Logging ke konsol untuk mempermudah debugging
+            System.out.println("[LOG] Login as: " + peran);
+            System.out.println("[LOG] Is Operator: " + session.isOperator());
+        } else {
+            lblNamaPengguna.setText("Guest");
+        }
     }
 
     // =========================================================
@@ -71,10 +93,11 @@ public class ProdukViewController {
     private VBox buatCardProduk(Produk produk) {
         VBox card = new VBox(8);
         card.setStyle("-fx-background-color: #132929; -fx-background-radius: 12; -fx-padding: 12; -fx-cursor: hand;");
-        card.setPrefWidth(380);
+        card.setPrefWidth(493);
 
         HBox baris = new HBox(12);
         baris.setStyle("-fx-alignment: CENTER_LEFT;");
+        baris.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
 
         StackPane fotoContainer = new StackPane();
         fotoContainer.setPrefSize(80, 80);
@@ -121,19 +144,17 @@ public class ProdukViewController {
         if (produk == null) return;
 
         try {
-            FXMLLoader loader = new FXMLLoader(
-                    getClass().getResource("/view/DetailProdukDialog.fxml")
-            );
-            // pakai controller terpisah
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/DetailProdukDialog.fxml"));
             DetailProdukController detailCtrl = new DetailProdukController();
+
             detailCtrl.init(produkController, idProduk,
                     // callback edit
                     () -> {
+                        // Proteksi tambahan jika tombol tidak di-disable
+                        if (session.isSupervisor()) return;
+
                         if (dialogDetail != null) dialogDetail.close();
                         idProdukSedangDiedit = idProduk;
-                        // ✅ FIX: Gunakan Timeline + Platform.runLater() untuk defer tampilkanFormProduk()
-                        // Timeline memberikan delay untuk cleanup Detail Dialog
-                        // Platform.runLater() memastikan tampilkanFormProduk() tidak dipanggil dari dalam animation
                         Timeline delayTimeline = new Timeline(
                                 new KeyFrame(Duration.millis(100), event -> {
                                     Platform.runLater(() -> tampilkanFormProduk());
@@ -143,15 +164,32 @@ public class ProdukViewController {
                     },
                     // callback hapus
                     () -> {
+                        // Proteksi tambahan
+                        if (session.isSupervisor()) return;
+
                         if (!konfirmasiAksi("Hapus produk ini?")) return;
                         produkController.hapusProduk(idProduk);
                         if (dialogDetail != null) dialogDetail.close();
                         tampilkanListProduk(produkController.getAllProduk());
                     }
             );
+
             loader.setController(detailCtrl);
             VBox content = loader.load();
             detailCtrl.isiData(produk);
+
+            // ✅ LOGIKA DISABLE BUTTON LANGSUNG
+            // Pastikan di DetailProdukController kamu punya getter atau akses ke button-nya
+            if (session.isSupervisor()) {
+                if (detailCtrl.getBtnEditDetail() != null) {
+                    detailCtrl.getBtnEditDetail().setDisable(true);
+                    detailCtrl.getBtnEditDetail().setOpacity(0.4); // Agar terlihat redup seperti di DataProduksi
+                }
+                if (detailCtrl.getBtnHapusDetail() != null) {
+                    detailCtrl.getBtnHapusDetail().setDisable(true);
+                    detailCtrl.getBtnHapusDetail().setOpacity(0.4);
+                }
+            }
 
             dialogDetail = new Dialog<>();
             dialogDetail.setTitle("Detail Produk");
@@ -174,6 +212,12 @@ public class ProdukViewController {
 
     @FXML
     public void klikTambahProduk() {
+        // ✅ Permission check: Hanya OPERATOR yang bisa menambah produk
+        if (!session.isOperator()) {
+            tampilkanPesan("Hanya Operator yang bisa menambah produk. Anda adalah: " + session.getPenggunaAktif().getPeran());
+            return;
+        }
+        
         idProdukSedangDiedit = null;
         tampilkanFormProduk();
     }

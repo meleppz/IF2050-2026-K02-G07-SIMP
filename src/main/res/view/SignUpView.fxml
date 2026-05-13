@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="view.SignUpViewController"
+            style="-fx-background-color: #0a1f1f; -fx-font-family: 'Plus Jakarta Sans';"
+            prefWidth="1280" prefHeight="900">
+
+    <center>
+        <VBox alignment="CENTER" spacing="20" prefWidth="580">
+
+            <!-- LOGO -->
+            <ImageView fx:id="logoImage"
+                       fitWidth="200" fitHeight="80"
+                       preserveRatio="true"/>
+
+            <!-- SUBTITLE -->
+            <Label text="Selamat datang!"
+                   style="-fx-text-fill: #c8e6c9; -fx-font-size: 16;"/>
+
+            <!-- FORM -->
+            <VBox spacing="12" prefWidth="580">
+
+                <!-- NIK -->
+                <Label text="Nomor Induk Karyawan"
+                       style="-fx-text-fill: white; -fx-font-size: 13;"/>
+                <TextField fx:id="fieldNik"
+                           promptText="18234567890"
+                           style="-fx-background-color: #132929; -fx-text-fill: white; -fx-prompt-text-fill: #5a8a8a; -fx-background-radius: 8; -fx-padding: 14 16; -fx-font-size: 14;"/>
+
+                <!-- NAMA -->
+                <Label text="Nama Lengkap"
+                       style="-fx-text-fill: white; -fx-font-size: 13;"/>
+                <TextField fx:id="fieldNama"
+                           promptText="Nama lengkap..."
+                           style="-fx-background-color: #132929; -fx-text-fill: white; -fx-prompt-text-fill: #5a8a8a; -fx-background-radius: 8; -fx-padding: 14 16; -fx-font-size: 14;"/>
+
+                <!-- USERNAME -->
+                <Label text="Username"
+                       style="-fx-text-fill: white; -fx-font-size: 13;"/>
+                <TextField fx:id="fieldUsername"
+                           promptText="Username..."
+                           style="-fx-background-color: #132929; -fx-text-fill: white; -fx-prompt-text-fill: #5a8a8a; -fx-background-radius: 8; -fx-padding: 14 16; -fx-font-size: 14;"/>
+
+                <!-- PASSWORD -->
+                <Label text="Password"
+                       style="-fx-text-fill: white; -fx-font-size: 13;"/>
+                <StackPane>
+                    <PasswordField fx:id="fieldPassword"
+                                   promptText="Password"
+                                   style="-fx-background-color: #132929; -fx-text-fill: white; -fx-prompt-text-fill: #5a8a8a; -fx-background-radius: 8; -fx-padding: 14 16; -fx-font-size: 14;"/>
+                    <TextField fx:id="fieldPasswordVisible"
+                               promptText="Password"
+                               visible="false" managed="false"
+                               style="-fx-background-color: #132929; -fx-text-fill: white; -fx-prompt-text-fill: #5a8a8a; -fx-background-radius: 8; -fx-padding: 14 16; -fx-font-size: 14;"/>
+                    <Button fx:id="btnTogglePassword"
+                            text="👁"
+                            onAction="#togglePassword"
+                            style="-fx-background-color: transparent; -fx-text-fill: #5a8a8a; -fx-cursor: hand;"
+                            StackPane.alignment="CENTER_RIGHT"/>
+                </StackPane>
+
+                <!-- KONFIRMASI PASSWORD -->
+                <Label text="Konfirmasi Password"
+                       style="-fx-text-fill: white; -fx-font-size: 13;"/>
+                <StackPane>
+                    <PasswordField fx:id="fieldKonfirmasi"
+                                   promptText="Konfirmasi password"
+                                   style="-fx-background-color: #132929; -fx-text-fill: white; -fx-prompt-text-fill: #5a8a8a; -fx-background-radius: 8; -fx-padding: 14 16; -fx-font-size: 14;"/>
+                    <TextField fx:id="fieldKonfirmasiVisible"
+                               promptText="Konfirmasi password"
+                               visible="false" managed="false"
+                               style="-fx-background-color: #132929; -fx-text-fill: white; -fx-prompt-text-fill: #5a8a8a; -fx-background-radius: 8; -fx-padding: 14 16; -fx-font-size: 14;"/>
+                    <Button fx:id="btnToggleKonfirmasi"
+                            text="👁"
+                            onAction="#toggleKonfirmasi"
+                            style="-fx-background-color: transparent; -fx-text-fill: #5a8a8a; -fx-cursor: hand;"
+                            StackPane.alignment="CENTER_RIGHT"/>
+                </StackPane>
+
+                <!-- PERAN -->
+                <Label text="Peran"
+                       style="-fx-text-fill: white; -fx-font-size: 13;"/>
+                <ComboBox fx:id="combPeran"
+                          promptText="Pilih peran..."
+                          maxWidth="Infinity"
+                          style="-fx-background-color: #132929; -fx-background-radius: 8;"/>
+
+            </VBox>
+
+            <!-- TOMBOL DAFTAR -->
+            <Button text="Daftar"
+                    maxWidth="580"
+                    onAction="#klikDaftar"
+                    style="-fx-background-color: #00e5a0; -fx-text-fill: #0a1f1f; -fx-font-weight: bold; -fx-background-radius: 24; -fx-padding: 16; -fx-font-size: 15; -fx-cursor: hand;"/>
+
+            <!-- LINK LOGIN -->
+            <HBox alignment="CENTER" spacing="4">
+                <Label text="Sudah punya akun?"
+                       style="-fx-text-fill: #5a8a8a; -fx-font-size: 13;"/>
+                <Label text="Login"
+                       fx:id="linkLogin"
+                       onMouseClicked="#klikLogin"
+                       style="-fx-text-fill: #00e5a0; -fx-font-size: 13; -fx-cursor: hand; -fx-underline: true;"/>
+            </HBox>
+
+        </VBox>
+    </center>
+
+</BorderPane>

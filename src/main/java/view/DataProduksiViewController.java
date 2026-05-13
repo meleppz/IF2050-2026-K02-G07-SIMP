@@ -10,6 +10,7 @@ import javafx.scene.layout.*;
 import model.Produk;
 import model.ProduksiHarian;
 import model.TargetProduksi;
+import util.Session;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -41,6 +42,7 @@ public class DataProduksiViewController {
     @FXML private TextField fieldJumlahProduksi;
     @FXML private TextField fieldJumlahDefect;
     @FXML private TextField fieldCatatan;
+    @FXML private Label lblNamaPengguna;
 
     // — data & controller —
     private ProdukController produkController;
@@ -48,11 +50,31 @@ public class DataProduksiViewController {
     private List<Produk> daftarProduk;
     private Produk produkTerpilih = null;
     private Integer idProduksiSedangDiedit = null;
+    
+    // ✅ Session untuk permission check
+    private Session session = Session.getInstance();
 
     @FXML
     public void initialize() {
         produkController = new ProdukController();
+
+        setupHeaderUser();
+
         tampilkanListProduksi(produkController.getAllProduksiHarian());
+    }
+
+    private void setupHeaderUser() {
+        if (session.isLoggedIn()) {
+            // Mengambil peran dari objek Pengguna (misal: "OPERATOR" atau "SUPERVISOR")
+            String peran = session.getPenggunaAktif().getPeran().toString();
+            lblNamaPengguna.setText(peran);
+
+            // Opsional: Logging ke konsol untuk mempermudah debugging
+            System.out.println("[LOG] Login as: " + peran);
+            System.out.println("[LOG] Is Operator: " + session.isOperator());
+        } else {
+            lblNamaPengguna.setText("Guest");
+        }
     }
 
     // =========================================================
@@ -84,6 +106,7 @@ public class DataProduksiViewController {
     private HBox buatBarisTabel(ProduksiHarian produksi) {
         HBox baris = new HBox();
         baris.setStyle("-fx-background-color: #0d2626; -fx-padding: 12 16; -fx-border-color: #132929; -fx-border-width: 0 0 1 0;");
+        baris.setAlignment(javafx.geometry.Pos.CENTER);  // ← Center alignment untuk baris
 
         Produk produk = produkController.getProdukById(produksi.getIdProduk());
         String namaProduk = produk != null ? produk.getNama() : "-";
@@ -97,20 +120,46 @@ public class DataProduksiViewController {
 
         Label lblKategori = new Label(kategori);
         lblKategori.setPrefWidth(150);
+        lblKategori.setAlignment(javafx.geometry.Pos.CENTER);  // ← Center alignment untuk kategori
         lblKategori.setStyle("-fx-text-fill: #00e5a0; -fx-background-color: #1e3a3a; -fx-background-radius: 20; -fx-padding: 2 10;");
 
         Label lblTanggal = buatLabel(produksi.getTanggalProduksi().toString(), 200);
 
         HBox aksi = new HBox(8);
         aksi.setPrefWidth(100);
+        aksi.setAlignment(javafx.geometry.Pos.CENTER);  // ← Center alignment untuk aksi buttons
 
-        Button btnEdit = new Button("✏");
-        btnEdit.setStyle("-fx-background-color: #00e5a0; -fx-text-fill: #0a1f1f; -fx-background-radius: 8; -fx-padding: 4 10;");
-        btnEdit.setOnAction(e -> klikEditProduksi(produksi.getIdProduksi()));
+        Button btnEdit = new Button();
+        btnEdit.setStyle("-fx-background-color: transparent; -fx-padding: 0; -fx-min-width: 0; -fx-min-height: 0; -fx-pref-width: 16; -fx-pref-height: 16;");
+        // ✅ Permission check: Disable untuk SUPERVISOR
+        if (session.isSupervisor()) {
+            btnEdit.setDisable(true);
+            btnEdit.setOpacity(0.3);
+        } else {
+            btnEdit.setOnAction(e -> klikEditProduksi(produksi.getIdProduksi()));
+        }
+        // Add edit icon
+        ImageView editIcon = new ImageView(new Image(getClass().getResourceAsStream("/images/icon_edit.png")));
+        editIcon.setFitWidth(24);
+        editIcon.setFitHeight(24);
+        editIcon.setPreserveRatio(true);
+        btnEdit.setGraphic(editIcon);
 
-        Button btnHapus = new Button("🗑");
-        btnHapus.setStyle("-fx-background-color: #1e3a3a; -fx-text-fill: white; -fx-background-radius: 8; -fx-padding: 4 10;");
-        btnHapus.setOnAction(e -> klikHapusProduksi(produksi.getIdProduksi()));
+        Button btnHapus = new Button();
+        btnHapus.setStyle("-fx-background-color: transparent; -fx-padding: 0; -fx-min-width: 0; -fx-min-height: 0; -fx-pref-width: 16; -fx-pref-height: 16;");
+        // ✅ Permission check: Disable untuk SUPERVISOR
+        if (session.isSupervisor()) {
+            btnHapus.setDisable(true);
+            btnHapus.setOpacity(0.3);
+        } else {
+            btnHapus.setOnAction(e -> klikHapusProduksi(produksi.getIdProduksi()));
+        }
+        // Add delete icon
+        ImageView deleteIcon = new ImageView(new Image(getClass().getResourceAsStream("/images/icon_delete.png")));
+        deleteIcon.setFitWidth(24);
+        deleteIcon.setFitHeight(24);
+        deleteIcon.setPreserveRatio(true);
+        btnHapus.setGraphic(deleteIcon);
 
         aksi.getChildren().addAll(btnEdit, btnHapus);
         baris.getChildren().addAll(lblId, lblNama, lblTotal, lblDefect, lblKategori, lblTanggal, aksi);
@@ -120,6 +169,7 @@ public class DataProduksiViewController {
     private Label buatLabel(String teks, double lebar) {
         Label label = new Label(teks);
         label.setPrefWidth(lebar);
+        label.setAlignment(javafx.geometry.Pos.CENTER);  // ← Center alignment untuk semua label
         label.setStyle("-fx-text-fill: white; -fx-font-size: 13;");
         return label;
     }
@@ -130,6 +180,12 @@ public class DataProduksiViewController {
 
     @FXML
     public void klikTambahProduksi() {
+        // ✅ Permission check: Hanya OPERATOR yang bisa menambah produksi
+        if (!session.isOperator()) {
+            tampilkanPesan("Hanya Operator yang bisa menambah data produksi. Anda adalah: " + session.getPenggunaAktif().getPeran());
+            return;
+        }
+        
         idProduksiSedangDiedit = null;
         produkTerpilih = null;
         tampilkanFormProduksi();
@@ -276,11 +332,14 @@ public class DataProduksiViewController {
             int jumlah = Integer.parseInt(jumlahStr);
             int defect = Integer.parseInt(defectStr);
             String catatan = fieldCatatan.getText().trim();
+            
+            // ✅ Dapatkan NIK user dari Session
+            String nikUser = session.getNikAktif();
 
             if (idProduksiSedangDiedit == null) {
                 // mode tambah
                 ProduksiHarian produksi = new ProduksiHarian(
-                        "000000",
+                        nikUser,
                         tanggal,
                         jumlah,
                         defect,
@@ -289,7 +348,7 @@ public class DataProduksiViewController {
                 );
                 boolean berhasil = produkController.tambahProduksiHarian(produksi);
                 if (berhasil) {
-                    System.out.println("✓ Produksi tersimpan");
+                    System.out.println("✓ Produksi tersimpan oleh " + nikUser);
                 } else {
                     tampilkanPesan("Gagal menyimpan data produksi!");
                     return;
@@ -304,7 +363,7 @@ public class DataProduksiViewController {
                 produksi.setKendala(catatan.isEmpty() ? null : catatan);
                 boolean berhasil = produkController.editProduksiHarian(produksi);
                 if (berhasil) {
-                    System.out.println("✓ Produksi diperbarui");
+                    System.out.println("✓ Produksi diperbarui oleh " + nikUser);
                 } else {
                     tampilkanPesan("Gagal memperbarui data produksi!");
                     return;
