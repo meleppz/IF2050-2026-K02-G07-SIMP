@@ -1,5 +1,6 @@
 package view;
 
+import model.Kategori;
 import controller.ProdukController;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -11,7 +12,7 @@ import model.Produk;
 import model.ProduksiHarian;
 import model.TargetProduksi;
 import util.Session;
-
+import javafx.scene.control.Alert;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.List;
@@ -25,6 +26,8 @@ public class DataProduksiViewController {
     @FXML private VBox isiTabel;
     @FXML private ScrollPane scrollTabel;
     @FXML private TextField fieldCariProduksi;
+    @FXML private ComboBox<String> comboFilterKategori;
+    @FXML private ComboBox<String> comboSort;
 
     // — komponen dari FormProduksiDialog.fxml —
     @FXML private VBox panelCariProduk;
@@ -57,10 +60,21 @@ public class DataProduksiViewController {
     @FXML
     public void initialize() {
         produkController = new ProdukController();
-
         setupHeaderUser();
 
-        tampilkanListProduksi(produkController.getAllProduksiHarian());
+        // Inisialisasi daftar awal
+        this.daftarProduksi = produkController.getAllProduksiHarian();
+
+        // Setup Combo Kategori
+        comboFilterKategori.getItems().add("Semua Kategori");
+        Kategori.getAll().forEach(k -> comboFilterKategori.getItems().add(k.getNamaKategori()));
+        comboFilterKategori.getSelectionModel().selectFirst();
+
+        // Setup Combo Sort
+        comboSort.getItems().addAll("Terbaru", "Terlama", "Abjad A-Z", "Abjad Z-A");
+        comboSort.getSelectionModel().selectFirst();
+
+        tampilkanListProduksi(this.daftarProduksi);
     }
 
     private void setupHeaderUser() {
@@ -437,18 +451,40 @@ public class DataProduksiViewController {
     // =========================================================
 
     @FXML
-    public void cariProduksi() {
+    public void updateFilterDanSort() {
         String keyword = fieldCariProduksi.getText().toLowerCase();
-        if (keyword.isEmpty()) {
-            tampilkanListProduksi(daftarProduksi);
-            return;
-        }
-        List<ProduksiHarian> hasil = daftarProduksi.stream()
-                .filter(p -> {
-                    Produk produk = produkController.getProdukById(p.getIdProduk());
-                    return produk != null && produk.getNama().toLowerCase().contains(keyword);
+        String kategori = comboFilterKategori.getValue();
+        String sortMode = comboSort.getValue();
+
+        List<ProduksiHarian> hasil = produkController.getAllProduksiHarian().stream()
+                .filter(ph -> {
+                    Produk p = produkController.getProdukById(ph.getIdProduk());
+                    if (p == null) return false;
+
+                    // Filter Keyword
+                    boolean matchKeyword = p.getNama().toLowerCase().contains(keyword) ||
+                            String.valueOf(ph.getIdProduksi()).contains(keyword);
+
+                    // Filter Kategori
+                    boolean matchKategori = kategori.equals("Semua Kategori") ||
+                            (p.getKategori() != null && p.getKategori().getNamaKategori().equals(kategori));
+
+                    return matchKeyword && matchKategori;
+                })
+                .sorted((p1, p2) -> {
+                    // Logika Sorting
+                    Produk prod1 = produkController.getProdukById(p1.getIdProduk());
+                    Produk prod2 = produkController.getProdukById(p2.getIdProduk());
+
+                    switch (sortMode) {
+                        case "Terlama": return p1.getTanggalProduksi().compareTo(p2.getTanggalProduksi());
+                        case "Abjad A-Z": return prod1.getNama().compareToIgnoreCase(prod2.getNama());
+                        case "Abjad Z-A": return prod2.getNama().compareToIgnoreCase(prod1.getNama());
+                        default: return p2.getTanggalProduksi().compareTo(p1.getTanggalProduksi()); // Terbaru
+                    }
                 })
                 .toList();
+
         tampilkanListProduksi(hasil);
     }
 

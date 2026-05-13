@@ -1,14 +1,22 @@
 package view;
 
+import javafx.scene.Scene;
 import controller.ProdukController;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
+import javafx.application.Platform;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
+import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 import javafx.util.Duration;
 import model.Produk;
 import model.TargetProduksi;
@@ -16,12 +24,7 @@ import util.Session;
 
 import java.io.IOException;
 import java.time.LocalDate;
-import java.util.List;
 import java.util.Optional;
-import javafx.stage.Window;
-import javafx.application.Platform;
-import javafx.stage.Stage;
-import javafx.stage.Modality;
 
 public class ProdukViewController {
 
@@ -32,47 +35,103 @@ public class ProdukViewController {
     @FXML private TextField fieldCariProduk;
     @FXML private Label lblNamaPengguna;
 
+    // — Tambahkan komponen filter baru (Pastikan fx:id di FXML sesuai) —
+    @FXML private ComboBox<String> comboFilterKategori;
+    @FXML private ComboBox<String> comboSortProduk;
+
     // — data & controller —
     private ProdukController produkController;
-    private List<Produk> daftarProduk;
     private Integer idProdukSedangDiedit = null;
     private Dialog<ButtonType> dialogDetail = null;
-    
-    // ✅ Session untuk permission check
     private Session session = Session.getInstance();
+
+    // Menggunakan ObservableList agar filter & sort bisa real-time
+    private ObservableList<Produk> masterDataProduk = FXCollections.observableArrayList();
+    private FilteredList<Produk> filteredProduk;
+    private SortedList<Produk> sortedProduk;
 
     @FXML
     public void initialize() {
         produkController = new ProdukController();
-
         setupHeaderUser();
 
-        tampilkanListProduk(produkController.getAllProduk());
-    }
+        // 1. Inisialisasi Data List
+        masterDataProduk.setAll(produkController.getAllProduk());
+        filteredProduk = new FilteredList<>(masterDataProduk, p -> true);
+        sortedProduk = new SortedList<>(filteredProduk);
 
-    private void setupHeaderUser() {
-        if (session.isLoggedIn()) {
-            // Mengambil peran dari objek Pengguna (misal: "OPERATOR" atau "SUPERVISOR")
-            String peran = session.getPenggunaAktif().getPeran().toString();
-            lblNamaPengguna.setText(peran);
+        // 2. Setup Dropdown Filter Kategori (Ambil unik dari data yang ada)
+        setupFilterKategori();
 
-            // Opsional: Logging ke konsol untuk mempermudah debugging
-            System.out.println("[LOG] Login as: " + peran);
-            System.out.println("[LOG] Is Operator: " + session.isOperator());
-        } else {
-            lblNamaPengguna.setText("Guest");
+        // 3. Setup Dropdown Sorting
+        if (comboSortProduk != null) {
+            comboSortProduk.setItems(FXCollections.observableArrayList(
+                    "Nama: A - Z", "Nama: Z - A", "Terbaru", "Terlama"
+            ));
+            comboSortProduk.getSelectionModel().selectFirst();
+            comboSortProduk.setOnAction(e -> jalankanFilterDanSort());
         }
+
+        // 4. Listener Pencarian (Real-time)
+        fieldCariProduk.textProperty().addListener((obs, oldVal, newVal) -> jalankanFilterDanSort());
+
+        // 5. Tampilkan data awal
+        renderGrid();
     }
 
-    // =========================================================
-    // PRODUK — LIST & CARD
-    // =========================================================
+    private void setupFilterKategori() {
+        if (comboFilterKategori == null) return;
 
-    private void tampilkanListProduk(List<Produk> listProduk) {
-        this.daftarProduk = listProduk;
+        ObservableList<String> listKategori = FXCollections.observableArrayList("Semua Kategori");
+        // Ambil nama kategori unik dari master data produk
+        masterDataProduk.stream()
+                .map(p -> p.getKategori() != null ? p.getKategori().getNamaKategori() : "-")
+                .distinct()
+                .forEach(listKategori::add);
+
+        comboFilterKategori.setItems(listKategori);
+        comboFilterKategori.getSelectionModel().selectFirst();
+        comboFilterKategori.setOnAction(e -> jalankanFilterDanSort());
+    }
+
+    // FUNGSI INTI: Menggabungkan Search + Filter Kategori + Sorting
+    private void jalankanFilterDanSort() {
+        String keyword = fieldCariProduk.getText().toLowerCase();
+        String kategoriSelected = comboFilterKategori != null ? comboFilterKategori.getValue() : "Semua Kategori";
+
+        // A. Proses Filtering
+        filteredProduk.setPredicate(produk -> {
+            // Filter Search
+            boolean cocokKeyword = produk.getNama().toLowerCase().contains(keyword) ||
+                    (produk.getKode() != null && produk.getKode().toLowerCase().contains(keyword));
+
+            // Filter Kategori
+            String katProduk = produk.getKategori() != null ? produk.getKategori().getNamaKategori() : "-";
+            boolean cocokKategori = kategoriSelected.equals("Semua Kategori") || katProduk.equals(kategoriSelected);
+
+            return cocokKeyword && cocokKategori;
+        });
+
+        // B. Proses Sorting
+        if (comboSortProduk != null) {
+            String sortOption = comboSortProduk.getValue();
+            if (sortOption != null) {
+                switch (sortOption) {
+                    case "Nama: A - Z" -> sortedProduk.setComparator((p1, p2) -> p1.getNama().compareToIgnoreCase(p2.getNama()));
+                    case "Nama: Z - A" -> sortedProduk.setComparator((p1, p2) -> p2.getNama().compareToIgnoreCase(p1.getNama()));
+                    case "Terbaru" -> sortedProduk.setComparator((p1, p2) -> Integer.compare(p2.getIdProduk(), p1.getIdProduk()));
+                    case "Terlama" -> sortedProduk.setComparator((p1, p2) -> Integer.compare(p1.getIdProduk(), p2.getIdProduk()));
+                }
+            }
+        }
+
+        renderGrid();
+    }
+
+    private void renderGrid() {
         gridProduk.getChildren().clear();
 
-        if (listProduk == null || listProduk.isEmpty()) {
+        if (sortedProduk.isEmpty()) {
             emptyState.setVisible(true);
             emptyState.setManaged(true);
             scrollProduk.setVisible(false);
@@ -85,8 +144,31 @@ public class ProdukViewController {
         scrollProduk.setVisible(true);
         scrollProduk.setManaged(true);
 
-        for (Produk produk : listProduk) {
+        for (Produk produk : sortedProduk) {
             gridProduk.getChildren().add(buatCardProduk(produk));
+        }
+    }
+
+    // Re-aktifkan fungsi pencarian tombol jika user menekan Enter
+    @FXML
+    public void cariProduk() {
+        jalankanFilterDanSort();
+    }
+
+    // Helper untuk merefresh data setelah Simpan/Hapus
+    private void refreshDataSetelahAksi() {
+        masterDataProduk.setAll(produkController.getAllProduk());
+        setupFilterKategori(); // Update kategori barangkali ada kategori baru
+        jalankanFilterDanSort();
+    }
+
+    // --- Sisa Method (buatCardProduk, pilihProduk, dll) tetap sama tapi panggil refreshDataSetelahAksi() ---
+
+    private void setupHeaderUser() {
+        if (session.isLoggedIn()) {
+            lblNamaPengguna.setText(session.getPenggunaAktif().getPeran().toString());
+        } else {
+            lblNamaPengguna.setText("Guest");
         }
     }
 
@@ -96,7 +178,6 @@ public class ProdukViewController {
         card.setPrefWidth(493);
 
         HBox baris = new HBox(12);
-        baris.setStyle("-fx-alignment: CENTER_LEFT;");
         baris.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
 
         StackPane fotoContainer = new StackPane();
@@ -104,11 +185,14 @@ public class ProdukViewController {
         fotoContainer.setStyle("-fx-background-color: #1e3a3a; -fx-background-radius: 8;");
 
         if (produk.getFoto() != null && !produk.getFoto().isEmpty()) {
-            ImageView foto = new ImageView(new Image("file:" + produk.getFoto()));
-            foto.setFitWidth(80);
-            foto.setFitHeight(80);
-            foto.setPreserveRatio(true);
-            fotoContainer.getChildren().add(foto);
+            try {
+                ImageView foto = new ImageView(new Image("file:" + produk.getFoto()));
+                foto.setFitWidth(80); foto.setFitHeight(80);
+                foto.setPreserveRatio(true);
+                fotoContainer.getChildren().add(foto);
+            } catch (Exception e) {
+                fotoContainer.getChildren().add(new Label("❌"));
+            }
         } else {
             Label placeholder = new Label("🖼");
             placeholder.setStyle("-fx-font-size: 24; -fx-text-fill: #5a8a8a;");
@@ -122,12 +206,7 @@ public class ProdukViewController {
         Label kategori = new Label(produk.getKategori() != null ? produk.getKategori().getNamaKategori() : "-");
         kategori.setStyle("-fx-background-color: #1e3a3a; -fx-text-fill: #00e5a0; -fx-font-size: 11; -fx-background-radius: 20; -fx-padding: 2 10;");
 
-        TargetProduksi target = produkController.getTargetAktif(produk.getIdProduk(), LocalDate.now());
-        String stokText = target != null ? "Stok: " + target.getRealisasi() + " " + produk.getSatuan() : "Stok: -";
-        Label stok = new Label(stokText);
-        stok.setStyle("-fx-text-fill: #5a8a8a; -fx-font-size: 12;");
-
-        info.getChildren().addAll(nama, kategori, stok);
+        info.getChildren().addAll(nama, kategori);
         baris.getChildren().addAll(fotoContainer, info);
         card.getChildren().add(baris);
         card.setOnMouseClicked(e -> pilihProduk(produk.getIdProduk()));
@@ -135,139 +214,70 @@ public class ProdukViewController {
         return card;
     }
 
-    // =========================================================
-    // PRODUK — DETAIL
-    // =========================================================
-
     public void pilihProduk(int idProduk) {
         Produk produk = produkController.getProdukById(idProduk);
         if (produk == null) return;
-
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/DetailProdukDialog.fxml"));
             DetailProdukController detailCtrl = new DetailProdukController();
-
             detailCtrl.init(produkController, idProduk,
-                    // callback edit
-                    () -> {
-                        // Proteksi tambahan jika tombol tidak di-disable
+                    () -> { // Callback Edit
                         if (session.isSupervisor()) return;
-
                         if (dialogDetail != null) dialogDetail.close();
                         idProdukSedangDiedit = idProduk;
-                        Timeline delayTimeline = new Timeline(
-                                new KeyFrame(Duration.millis(100), event -> {
-                                    Platform.runLater(() -> tampilkanFormProduk());
-                                })
-                        );
-                        delayTimeline.play();
+                        Platform.runLater(() -> tampilkanFormProduk());
                     },
-                    // callback hapus
-                    () -> {
-                        // Proteksi tambahan
+                    () -> { // Callback Hapus
                         if (session.isSupervisor()) return;
-
                         if (!konfirmasiAksi("Hapus produk ini?")) return;
                         produkController.hapusProduk(idProduk);
                         if (dialogDetail != null) dialogDetail.close();
-                        tampilkanListProduk(produkController.getAllProduk());
+                        refreshDataSetelahAksi();
                     }
             );
-
             loader.setController(detailCtrl);
             VBox content = loader.load();
             detailCtrl.isiData(produk);
 
-            // ✅ LOGIKA DISABLE BUTTON LANGSUNG
-            // Pastikan di DetailProdukController kamu punya getter atau akses ke button-nya
-            if (session.isSupervisor()) {
-                if (detailCtrl.getBtnEditDetail() != null) {
-                    detailCtrl.getBtnEditDetail().setDisable(true);
-                    detailCtrl.getBtnEditDetail().setOpacity(0.4); // Agar terlihat redup seperti di DataProduksi
-                }
-                if (detailCtrl.getBtnHapusDetail() != null) {
-                    detailCtrl.getBtnHapusDetail().setDisable(true);
-                    detailCtrl.getBtnHapusDetail().setOpacity(0.4);
-                }
-            }
-
             dialogDetail = new Dialog<>();
-            dialogDetail.setTitle("Detail Produk");
             dialogDetail.getDialogPane().setContent(content);
             dialogDetail.getDialogPane().getButtonTypes().add(ButtonType.CANCEL);
             dialogDetail.getDialogPane().lookupButton(ButtonType.CANCEL).setVisible(false);
-
-            idProdukSedangDiedit = idProduk;
-            dialogDetail.initOwner(gridProduk.getScene().getWindow()); // ← tambahkan ini
+            dialogDetail.initOwner(gridProduk.getScene().getWindow());
             dialogDetail.showAndWait();
-
-        } catch (IOException e) {
-            tampilkanPesan("Gagal membuka detail: " + e.getMessage());
-        }
+        } catch (IOException e) { e.printStackTrace(); }
     }
-
-    // =========================================================
-    // PRODUK — FORM TAMBAH & EDIT
-    // =========================================================
 
     @FXML
     public void klikTambahProduk() {
-        // ✅ Permission check: Hanya OPERATOR yang bisa menambah produk
         if (!session.isOperator()) {
-            tampilkanPesan("Hanya Operator yang bisa menambah produk. Anda adalah: " + session.getPenggunaAktif().getPeran());
+            tampilkanPesan("Akses Ditolak!");
             return;
         }
-        
         idProdukSedangDiedit = null;
         tampilkanFormProduk();
     }
 
     private void tampilkanFormProduk() {
         try {
-            FXMLLoader loader = new FXMLLoader(
-                    getClass().getResource("/view/FormProdukDialog.fxml")
-            );
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/FormProdukDialog.fxml"));
             FormProdukController formCtrl = new FormProdukController();
             formCtrl.init(produkController, () -> simpanDariForm(formCtrl));
             loader.setController(formCtrl);
             VBox formContent = loader.load();
 
-            // ✅ Setup data LANGSUNG sebelum Stage ditampilkan
-            if (idProdukSedangDiedit == null) {
-                formCtrl.setupUntukTambah();
-            } else {
-                Produk produk = produkController.getProdukById(idProdukSedangDiedit);
-                if (produk != null) formCtrl.setupUntukEdit(produk);
+            if (idProdukSedangDiedit == null) formCtrl.setupUntukTambah();
+            else {
+                Produk p = produkController.getProdukById(idProdukSedangDiedit);
+                if (p != null) formCtrl.setupUntukEdit(p);
             }
 
-            // ✅ Root VBox: explicit disable input consumption
-            formContent.setFocusTraversable(false);
-
             Stage formStage = new Stage();
-            formStage.setTitle(idProdukSedangDiedit == null ? "Tambah Produk Baru" : "Edit Produk");
             formStage.initModality(Modality.APPLICATION_MODAL);
             formStage.initOwner(gridProduk.getScene().getWindow());
-            javafx.scene.Scene scene = new javafx.scene.Scene(formContent);
-            formStage.setScene(scene);
-            
-            formStage.setOnShown(e -> {
-                // ✅ Explicit layout flush untuk memastikan scene sudah 100% rendered
-                formContent.layout();
-                
-                // ✅ Gunakan Timeline untuk delay fokus yang reliable dan ensure event queue clear
-                Timeline focusTimeline = new Timeline(
-                        new KeyFrame(Duration.millis(300), event -> {
-                            formCtrl.fokusKeFieldPertama();
-                        })
-                );
-                focusTimeline.play();
-            });
-            
+            formStage.setScene(new Scene(formContent));
             formStage.showAndWait();
-
-        } catch (IOException e) {
-            tampilkanPesan("Gagal membuka form: " + e.getMessage());
-        }
+        } catch (IOException e) { e.printStackTrace(); }
     }
 
     private void simpanDariForm(FormProdukController formCtrl) {
@@ -295,7 +305,7 @@ public class ProdukViewController {
                         int jumlahTarget = Integer.parseInt(targetStr);
                         // Sesuaikan parameter constructor TargetProduksi kamu di sini
                         model.TargetProduksi target = new model.TargetProduksi(
-                                hasil.getIdProduk(), "000000", jumlahTarget, 30
+                                hasil.getIdProduk(), "000000", jumlahTarget, 1
                         );
                         produkController.tambahTarget(target);
                     }
@@ -317,24 +327,7 @@ public class ProdukViewController {
 
         // Menutup window form dengan cara yang lebih aman
         formCtrl.fieldNamaProduk.getScene().getWindow().hide();
-        tampilkanListProduk(produkController.getAllProduk());
-    }
-
-    // =========================================================
-    // HELPER
-    // =========================================================
-
-    @FXML
-    public void cariProduk() {
-        String keyword = fieldCariProduk.getText().toLowerCase();
-        if (keyword.isEmpty()) {
-            tampilkanListProduk(daftarProduk);
-            return;
-        }
-        List<Produk> hasil = daftarProduk.stream()
-                .filter(p -> p.getNama().toLowerCase().contains(keyword))
-                .toList();
-        tampilkanListProduk(hasil);
+        refreshDataSetelahAksi();
     }
 
     private void tampilkanPesan(String pesan) {
@@ -346,7 +339,6 @@ public class ProdukViewController {
     public boolean konfirmasiAksi(String aksi) {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setHeaderText(aksi);
-        alert.setContentText("Tindakan kamu tidak bisa dipulihkan");
         Optional<ButtonType> result = alert.showAndWait();
         return result.isPresent() && result.get() == ButtonType.OK;
     }
