@@ -10,34 +10,25 @@ import java.util.*;
 
 /**
  * ReportController bertanggung jawab mengumpulkan data dari model Produk,
- * mengolahnya menjadi struktur LaporanProduksi, lalu menyerahkan ke FileGeneratorService.
+ * mengolahnya menjadi struktur LaporanProduksi.
  */
 public class ReportController {
 
-    // Menggunakan instance Produk karena repository sudah dimerge ke dalam kelas Produk
     private final Produk produkManager;
 
     public ReportController() {
         this.produkManager = new Produk();
     }
 
-    // =========================================================
-    // ENTRY POINT — dipanggil dari EksporLaporanView
-    // =========================================================
-
     public LaporanProduksi susunLaporan(List<Integer> idProdukList,
                                         LocalDate tglMulai,
                                         LocalDate tglSelesai) {
 
-        // 1. Ambil data produk melalui produkManager
         List<Produk> daftarProduk = ambilDaftarProduk(idProdukList);
-
-        // 2. Kumpulkan baris tabel & data performa
         List<LaporanProduksi.BarisTabel> barisTabel = new ArrayList<>();
         List<LaporanProduksi.PerformaProduk> performaList = new ArrayList<>();
 
         for (Produk produk : daftarProduk) {
-            // Memanggil method query yang sekarang ada di kelas Produk
             List<ProduksiHarian> listProduksi = produkManager
                     .getProduksiByFilter(produk.getIdProduk(), tglMulai, tglSelesai);
 
@@ -71,10 +62,6 @@ public class ReportController {
         return new LaporanProduksi(barisTabel, performaList, tglMulai, tglSelesai);
     }
 
-    // =========================================================
-    // HELPER — ambil produk
-    // =========================================================
-
     private List<Produk> ambilDaftarProduk(List<Integer> idProdukList) {
         if (idProdukList == null || idProdukList.isEmpty()) {
             return produkManager.getAllProduk();
@@ -87,13 +74,37 @@ public class ReportController {
         return hasil;
     }
 
-    // =========================================================
-    // HELPER — hitung performa satu produk
-    // =========================================================
-
     private LaporanProduksi.PerformaProduk hitungPerforma(Produk produk,
                                                           List<ProduksiHarian> listProduksi,
                                                           List<TargetProduksi> listTarget) {
         int totalProduksi = listProduksi.stream()
                 .mapToInt(ProduksiHarian::getJumlahAktual)
-                .
+                .sum();
+
+        int totalDefect = listProduksi.stream()
+                .mapToInt(ProduksiHarian::getJumlahDefect)
+                .sum();
+
+        double rasioDefect = totalProduksi > 0
+                ? (double) totalDefect / totalProduksi * 100
+                : 0.0;
+
+        Double rasioVsTarget = null;
+        int totalTarget = listTarget.stream()
+                .mapToInt(TargetProduksi::getJumlahTarget)
+                .sum();
+
+        if (totalTarget > 0) {
+            rasioVsTarget = (double) totalProduksi / totalTarget * 100;
+        }
+
+        return new LaporanProduksi.PerformaProduk(
+                produk.getIdProduk(),
+                produk.getNama(),
+                totalProduksi,
+                totalDefect,
+                rasioDefect,
+                rasioVsTarget
+        );
+    }
+} // <--- Pastikan kurung penutup kelas ini ikut ter-copy
