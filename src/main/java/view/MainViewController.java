@@ -33,7 +33,7 @@ public class MainViewController {
         }
 
         // default screen: Produk
-        navigasiProduk();
+        navigasiBuatLaporan();
     }
 
     @FXML
@@ -57,9 +57,8 @@ public class MainViewController {
     @FXML
     public void navigasiBuatLaporan() {
         setAktif(btnBuatLaporan);
-        // TODO: load BuatLaporanView
+        loadScreen("/view/EksporLaporanView.fxml");
     }
-
     @FXML
     public void klikKeluar() {
         System.exit(0);
