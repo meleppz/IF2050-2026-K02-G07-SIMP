@@ -295,7 +295,7 @@ public class ProdukViewController {
                         int jumlahTarget = Integer.parseInt(targetStr);
                         // Sesuaikan parameter constructor TargetProduksi kamu di sini
                         model.TargetProduksi target = new model.TargetProduksi(
-                                hasil.getIdProduk(), "000000", jumlahTarget, 30
+                                hasil.getIdProduk(), "000000", jumlahTarget, 1
                         );
                         produkController.tambahTarget(target);
                     }
