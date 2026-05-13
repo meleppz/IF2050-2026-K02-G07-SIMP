@@ -12,7 +12,7 @@ public class ReportController {
 
     public LaporanProduksi susunLaporan(List<Integer> idProdukList, LocalDate tglMulai, LocalDate tglSelesai) {
 
-        // 1. Ambil Produk menggunakan method static yang sudah ada di Produk.java temanmu
+        // 1. Ambil data produk
         List<Produk> semuaProduk = Produk.getAll();
         List<Produk> produkTerpilih = semuaProduk.stream()
                 .filter(p -> idProdukList == null || idProdukList.isEmpty() || idProdukList.contains(p.getIdProduk()))
@@ -22,45 +22,62 @@ public class ReportController {
         List<LaporanProduksi.PerformaProduk> performaList = new ArrayList<>();
 
         for (Produk produk : produkTerpilih) {
-            // 2. Gunakan method static dari ProduksiHarian.java temanmu (getByIdProduk)
+            // 2. Ambil riwayat produksi harian
             List<ProduksiHarian> semuaProduksi = ProduksiHarian.getByIdProduk(produk.getIdProduk());
 
-            // Filter tanggal secara manual di sini agar tidak perlu ubah file ProduksiHarian
+            // Filter berdasarkan jangka waktu yang dipilih user
             List<ProduksiHarian> listFiltered = semuaProduksi.stream()
                     .filter(ph -> (tglMulai == null || !ph.getTanggalProduksi().isBefore(tglMulai)) &&
                             (tglSelesai == null || !ph.getTanggalProduksi().isAfter(tglSelesai)))
                     .sorted(Comparator.comparing(ProduksiHarian::getTanggalProduksi))
                     .collect(Collectors.toList());
 
-            // 3. Tambahkan ke baris tabel
-            if (listFiltered.isEmpty()) {
-                barisTabel.add(new LaporanProduksi.BarisTabel(produk.getIdProduk(), produk.getNama(), null, 0, 0));
-            } else {
+            // 3. Masukkan ke detail Baris Tabel
+            if (!listFiltered.isEmpty()) {
                 for (ProduksiHarian ph : listFiltered) {
                     barisTabel.add(new LaporanProduksi.BarisTabel(
-                            produk.getIdProduk(), produk.getNama(), ph.getTanggalProduksi(),
-                            ph.getJumlahAktual(), ph.getJumlahDefect()));
+                            produk.getIdProduk(),
+                            produk.getNama(),
+                            ph.getTanggalProduksi(),
+                            ph.getJumlahAktual(),
+                            ph.getJumlahDefect()));
                 }
             }
 
-            // 4. Hitung Performa (Gunakan TargetProduksi.getAktifPadaTanggal yang sudah ada)
-            TargetProduksi target = TargetProduksi.getAktifPadaTanggal(produk.getIdProduk(), LocalDate.now());
-            performaList.add(hitungPerformaManual(produk, listFiltered, target));
+            // 4. Hitung Summary (Total & Performa) per Produk
+            performaList.add(hitungSummaryProduk(produk, listFiltered));
         }
 
         return new LaporanProduksi(barisTabel, performaList, tglMulai, tglSelesai);
     }
 
-    private LaporanProduksi.PerformaProduk hitungPerformaManual(Produk p, List<ProduksiHarian> lp, TargetProduksi target) {
-        int totalProd = lp.stream().mapToInt(ProduksiHarian::getJumlahAktual).sum();
-        int totalDef = lp.stream().mapToInt(ProduksiHarian::getJumlahDefect).sum();
-        double rasioDef = totalProd > 0 ? (double) totalDef / totalProd * 100 : 0;
+    /**
+     * Menghitung rangkuman performa berdasarkan data produksi yang sudah difilter
+     */
+    private LaporanProduksi.PerformaProduk hitungSummaryProduk(Produk p, List<ProduksiHarian> lp) {
+        // Hitung total produksi dan total defect dalam range tanggal
+        int totalProduksi = lp.stream().mapToInt(ProduksiHarian::getJumlahAktual).sum();
+        int totalDefect = lp.stream().mapToInt(ProduksiHarian::getJumlahDefect).sum();
 
-        Double rasioVsTarget = null;
-        if (target != null && target.getJumlahTarget() > 0) {
-            rasioVsTarget = (double) totalProd / target.getJumlahTarget() * 100;
+        // LOGIKA PERFORMA: (Produksi Bersih / Total Produksi) * 100
+        // Produksi Bersih = Total Produksi - Total Defect
+        double persentasePerforma = 0;
+        if (totalProduksi > 0) {
+            double produksiBersih = (double) totalProduksi - totalDefect;
+            persentasePerforma = (produksiBersih / totalProduksi) * 100;
         }
 
-        return new LaporanProduksi.PerformaProduk(p.getIdProduk(), p.getNama(), totalProd, totalDef, rasioDef, rasioVsTarget);
+        // Rasio Defect (tambahan untuk insight)
+        double rasioDefect = totalProduksi > 0 ? ((double) totalDefect / totalProduksi) * 100 : 0;
+
+        // Return object PerformaProduk sesuai struktur model LaporanProduksi
+        return new LaporanProduksi.PerformaProduk(
+                p.getIdProduk(),
+                p.getNama(),
+                totalProduksi,
+                totalDefect,
+                persentasePerforma, // Disimpan sebagai performa utama
+                rasioDefect        // Disimpan sebagai data tambahan
+        );
     }
 }
