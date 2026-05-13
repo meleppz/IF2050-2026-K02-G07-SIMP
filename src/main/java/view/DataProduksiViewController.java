@@ -11,11 +11,13 @@ import javafx.scene.layout.*;
 import model.Produk;
 import model.ProduksiHarian;
 import model.TargetProduksi;
+import service.StatistikService;
 import util.Session;
 import javafx.scene.control.Alert;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public class DataProduksiViewController {
@@ -53,6 +55,9 @@ public class DataProduksiViewController {
     private List<Produk> daftarProduk;
     private Produk produkTerpilih = null;
     private Integer idProduksiSedangDiedit = null;
+    
+    // ✅ Instance StatistikService untuk menghitung performa
+    private StatistikService statistikService = new StatistikService();
     
     // ✅ Session untuk permission check
     private Session session = Session.getInstance();
@@ -310,7 +315,11 @@ public class DataProduksiViewController {
         TargetProduksi target = produkController.getTargetAktif(produk.getIdProduk(), LocalDate.now());
         if (target != null) {
             detailTargetProduk.setText(target.getJumlahTarget() + " " + produk.getSatuan() + " per Bulan");
-            detailPerformaProduk.setText(String.format("%.0f%%", target.getPersentasePencapaian()));
+            
+            // ✅ Hitung performa menggunakan StatistikService (30 hari terakhir)
+            Map<String, Object> performaData = statistikService.getPerforma30Hari(produk.getIdProduk(), LocalDate.now());
+            double rataRataPerforma = (Double) performaData.get("rataRataPerforma");
+            detailPerformaProduk.setText(String.format("%.0f%%", rataRataPerforma));
         } else {
             detailTargetProduk.setText("Belum ada target");
             detailPerformaProduk.setText("-");
@@ -346,7 +355,29 @@ public class DataProduksiViewController {
             int jumlah = Integer.parseInt(jumlahStr);
             int defect = Integer.parseInt(defectStr);
             String catatan = fieldCatatan.getText().trim();
-            
+
+            // ——— VALIDASI ———
+
+            // 1. Cek nilai minimal
+            if (jumlah < 0 || defect < 0) {
+                tampilkanPesan("Jumlah produksi dan defect tidak boleh kurang dari 0!");
+                return;
+            }
+
+            // 2. Cek batas maksimal defect
+            if (defect > jumlah) {
+                tampilkanPesan("Jumlah defect tidak boleh melebihi jumlah total produksi!");
+                return;
+            }
+
+            // ✅ 3. Cek tanggal (Tidak boleh lebih dari hari ini)
+            if (tanggal.isAfter(LocalDate.now())) {
+                tampilkanPesan("Tanggal produksi tidak boleh melebihi tanggal hari ini!");
+                return;
+            }
+
+            // ——— SELESAI VALIDASI ———
+
             // ✅ Dapatkan NIK user dari Session
             String nikUser = session.getNikAktif();
 
