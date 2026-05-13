@@ -63,7 +63,16 @@ public class DashboardView extends BorderPane {
     private static final DateTimeFormatter FMT_DISPLAY =
             DateTimeFormatter.ofPattern("d MMM yyyy", new Locale("id"));
 
+    private MainViewController mainController;
+
     public DashboardView() {
+        loadFonts();
+        buildUI();
+        refresh();
+    }
+
+    public DashboardView(MainViewController mainController) {
+        this.mainController = mainController;
         loadFonts();
         buildUI();
         refresh();
@@ -318,9 +327,6 @@ public class DashboardView extends BorderPane {
         box.setPadding(new Insets(60, 40, 60, 40));
         box.setStyle("-fx-background-color: " + BG_CARD + "; -fx-background-radius: 12;");
 
-        Label lblIcon = new Label("😟");
-        lblIcon.setStyle("-fx-font-size: 56;");
-
         Label lblTitle = new Label("Uh Oh");
         lblTitle.setFont(fBold20);
         lblTitle.setStyle("-fx-text-fill: " + TEXT_WHITE + ";");
@@ -340,9 +346,13 @@ public class DashboardView extends BorderPane {
         btnData.setMaxWidth(400);
         btnData.setFont(fBold14);
         btnData.setStyle(btnStyleAccent());
-        // TODO: navigasi ke halaman input produksi harian setelah siap
+        btnData.setOnAction(e -> {
+            if (mainController != null) {
+                mainController.navigasiDataProduksi();
+            }
+        });
 
-        box.getChildren().addAll(lblIcon, lblTitle, lblSub, btnProduk, btnData);
+        box.getChildren().addAll(lblTitle, lblSub, btnProduk, btnData);
         return box;
     }
 
@@ -482,15 +492,8 @@ public class DashboardView extends BorderPane {
     // NAVIGASI
     // =========================================================
     private void navigasiKeProdukView() {
-        try {
-            FXMLLoader loader = new FXMLLoader(
-                    getClass().getResource("/view/ProdukView.fxml")
-            );
-            javafx.scene.Parent produkView = loader.load();
-            Stage stage = (Stage) getScene().getWindow();
-            stage.setScene(new Scene(produkView, 1280, 900));
-        } catch (IOException e) {
-            showAlert("Gagal membuka halaman Produk: " + e.getMessage());
+        if (mainController != null) {
+            mainController.navigasiProduk();
         }
     }
 
@@ -498,7 +501,7 @@ public class DashboardView extends BorderPane {
     // REFRESH DATA
     // =========================================================
     public void refresh() {
-        List<ProduksiHarian> data = produkController.getProduksiHarianByDateRange(dari, sampai);
+        List<ProduksiHarian> data = ProduksiHarian.getByDateRange(dari, sampai);
         boolean adaData = data != null && !data.isEmpty();
 
         emptyStateBox.setVisible(!adaData);
