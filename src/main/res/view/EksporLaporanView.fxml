@@ -12,20 +12,21 @@
 
             <Label text="Ekspor Laporan Produksi" style="-fx-text-fill: #00e5a0; -fx-font-size: 26; -fx-font-weight: bold;"/>
 
-            <VBox spacing="12" style="-fx-background-color: #132929; -fx-padding: 24; -fx-background-radius: 16; -fx-border-color: #1e3a3a; -fx-border-radius: 16;">
+            <VBox spacing="10" style="-fx-background-color: #132929; -fx-padding: 15; -fx-background-radius: 16; -fx-border-color: #1e3a3a; -fx-border-radius: 16;">
                 <HBox alignment="CENTER_LEFT" spacing="10">
-                    <Label text="Pilih Produk" style="-fx-text-fill: white; -fx-font-size: 16; -fx-font-weight: bold;"/>
+                    <Label text="Pilih Produk" style="-fx-text-fill: white; -fx-font-size: 14; -fx-font-weight: bold;"/>
                     <Region HBox.hgrow="ALWAYS" />
                     <Button fx:id="btnSemuaProduk" text="Pilih Semua Produk" onAction="#klikSemuaProduk"
-                            style="-fx-background-color: transparent; -fx-text-fill: #00e5a0; -fx-border-color: #00e5a0; -fx-border-radius: 16; -fx-cursor: hand; -fx-font-size: 12;"/>
+                            style="-fx-background-color: transparent; -fx-text-fill: #00e5a0; -fx-border-color: #00e5a0; -fx-border-radius: 16; -fx-cursor: hand; -fx-font-size: 11;"/>
                 </HBox>
 
                 <TextField fx:id="fieldCariProduk" promptText="Cari nama atau kode produk..."
-                           style="-fx-background-color: #0a1f1f; -fx-text-fill: white; -fx-padding: 12; -fx-background-radius: 16; -fx-border-color: #1e3a3a; -fx-border-radius: 16;"/>
+                           style="-fx-background-color: #0a1f1f; -fx-text-fill: white; -fx-padding: 10; -fx-background-radius: 16; -fx-border-color: #1e3a3a; -fx-border-radius: 16;"/>
 
-                <ScrollPane fitToWidth="true" prefHeight="180" maxHeight="200" style="-fx-background: transparent; -fx-background-color: transparent;">
-                    <FlowPane fx:id="listProdukContainer" hgap="10" vgap="10" style="-fx-padding: 10 0;"
-                              prefWrapLength="800" />
+                <ScrollPane fitToHeight="true" vbarPolicy="NEVER" hbarPolicy="AS_NEEDED"
+                            style="-fx-background: transparent; -fx-background-color: transparent; -fx-border-color: transparent;">
+                    <HBox fx:id="listProdukHorizontal" spacing="15" style="-fx-padding: 5 0;">
+                    </HBox>
                 </ScrollPane>
             </VBox>
 
@@ -60,8 +61,8 @@
                 </VBox>
             </HBox>
 
-            <Button text="BUAT LAPORAN SEKARANG" onAction="#klikBuatLaporan" maxWidth="Infinity" prefHeight="52"
-                    style="-fx-background-color: #00e5a0; -fx-text-fill: #0a1f1f; -fx-font-weight: bold; -fx-font-size: 15; -fx-background-radius: 16; -fx-cursor: hand;"/>
+            <Button text="Buat Laporan Sekarang" onAction="#klikBuatLaporan" maxWidth="Infinity" prefHeight="52"
+                    style="-fx-background-color: #00e5a0; -fx-text-fill: #0a1f1f; -fx-font-weight: bold; -fx-font-size: 16; -fx-background-radius: 16; -fx-cursor: hand;"/>
         </VBox>
     </ScrollPane>
 
