@@ -96,19 +96,40 @@ public class DashboardView extends BorderPane {
     // BUILD UI
     // =========================================================
     private void buildUI() {
+        // 1. Bersihkan style dasar
         setStyle("-fx-background-color: " + BG_MAIN + ";");
-        setPrefWidth(1280);
-        setTop(buildHeader());
+
+        ScrollPane scrollPane = new ScrollPane();
+        scrollPane.setFitToWidth(true);
+        scrollPane.setFitToHeight(false);
+        scrollPane.setStyle(
+                "-fx-background: " + BG_MAIN + ";" +
+                        "-fx-background-color: " + BG_MAIN + ";" +
+                        "-fx-border-color: transparent;"
+        );
+
+        VBox containerUtama = new VBox();
+        containerUtama.setStyle("-fx-background-color: " + BG_MAIN + ";");
+        containerUtama.setSpacing(0);
+
+        containerUtama.getChildren().add(buildHeader());
 
         HBox body = new HBox(16);
         body.setPadding(new Insets(0, 24, 24, 24));
+        body.setAlignment(Pos.TOP_LEFT);
 
         VBox mainContent = buildMainContent();
         VBox rightPanel  = buildRightPanel();
 
         HBox.setHgrow(mainContent, Priority.ALWAYS);
+
         body.getChildren().addAll(mainContent, rightPanel);
-        setCenter(body);
+
+        containerUtama.getChildren().add(body);
+
+        // 7. Pasang semuanya ke BorderPane
+        scrollPane.setContent(containerUtama);
+        setCenter(scrollPane);
     }
 
     // ─── HEADER ───────────────────────────────────────────────

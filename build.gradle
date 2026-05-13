@@ -45,7 +45,6 @@ sourceSets {
     }
 }
 
-// 3. Hapus bagian jvmArgs manual tadi, biarkan plugin yang bekerja
 application {
-    mainClass = 'MainApp'
+    mainClass = 'view.MainApp'
 }
