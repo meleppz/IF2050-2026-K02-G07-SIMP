@@ -14,6 +14,7 @@ import java.util.*;
  */
 public class ReportController {
 
+    // Kita tetap butuh satu instance dummy/manager untuk memanggil method DAO di Produk.java
     private final Produk produkManager;
 
     public ReportController() {
@@ -29,6 +30,8 @@ public class ReportController {
         List<LaporanProduksi.PerformaProduk> performaList = new ArrayList<>();
 
         for (Produk produk : daftarProduk) {
+            // PERBAIKAN: Pastikan method getProduksiByFilter & getTargetByFilter
+            // sudah kamu tambahkan di Produk.java seperti instruksi sebelumnya
             List<ProduksiHarian> listProduksi = produkManager
                     .getProduksiByFilter(produk.getIdProduk(), tglMulai, tglSelesai);
 
@@ -36,6 +39,7 @@ public class ReportController {
                     .getTargetByFilter(produk.getIdProduk(), tglMulai, tglSelesai);
 
             if (listProduksi.isEmpty()) {
+                // Jika tidak ada produksi, masukkan satu baris kosong sebagai penanda
                 barisTabel.add(new LaporanProduksi.BarisTabel(
                         produk.getIdProduk(),
                         produk.getNama(),
@@ -43,6 +47,7 @@ public class ReportController {
                         0, 0
                 ));
             } else {
+                // Sortir berdasarkan tanggal produksi agar rapi di tabel/PDF
                 listProduksi.sort(Comparator.comparing(ProduksiHarian::getTanggalProduksi));
                 for (ProduksiHarian ph : listProduksi) {
                     barisTabel.add(new LaporanProduksi.BarisTabel(
@@ -63,9 +68,11 @@ public class ReportController {
     }
 
     private List<Produk> ambilDaftarProduk(List<Integer> idProdukList) {
+        // Jika list ID kosong, anggap user ingin semua produk
         if (idProdukList == null || idProdukList.isEmpty()) {
             return produkManager.getAllProduk();
         }
+
         List<Produk> hasil = new ArrayList<>();
         for (int id : idProdukList) {
             Produk p = produkManager.getProdukById(id);
@@ -77,6 +84,7 @@ public class ReportController {
     private LaporanProduksi.PerformaProduk hitungPerforma(Produk produk,
                                                           List<ProduksiHarian> listProduksi,
                                                           List<TargetProduksi> listTarget) {
+        // Menggunakan Stream API untuk efisiensi perhitungan total
         int totalProduksi = listProduksi.stream()
                 .mapToInt(ProduksiHarian::getJumlahAktual)
                 .sum();
@@ -85,6 +93,7 @@ public class ReportController {
                 .mapToInt(ProduksiHarian::getJumlahDefect)
                 .sum();
 
+        // Hitung rasio defect (hindari pembagian dengan nol)
         double rasioDefect = totalProduksi > 0
                 ? (double) totalDefect / totalProduksi * 100
                 : 0.0;
@@ -94,6 +103,7 @@ public class ReportController {
                 .mapToInt(TargetProduksi::getJumlahTarget)
                 .sum();
 
+        // Hitung realisasi vs target
         if (totalTarget > 0) {
             rasioVsTarget = (double) totalProduksi / totalTarget * 100;
         }
@@ -107,4 +117,4 @@ public class ReportController {
                 rasioVsTarget
         );
     }
-} // <--- Pastikan kurung penutup kelas ini ikut ter-copy
+}
