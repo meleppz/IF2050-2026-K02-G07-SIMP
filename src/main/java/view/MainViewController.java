@@ -41,6 +41,8 @@ public class MainViewController {
         loadIcon(iconLaporan, "/images/icon_laporan.png");
         loadIcon(iconKeluar, "/images/icon_keluar.png");
 
+        // default screen: Produk
+        navigasiBuatLaporan();
         navigasiProduk();
     }
 
@@ -68,9 +70,8 @@ public class MainViewController {
     @FXML
     public void navigasiBuatLaporan() {
         setAktif(btnBuatLaporan);
-        // TODO: load BuatLaporanView
+        loadScreen("/view/EksporLaporanView.fxml");
     }
-
     @FXML
     public void klikKeluar() {
         util.Session.getInstance().logout();
