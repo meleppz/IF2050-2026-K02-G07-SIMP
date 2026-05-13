@@ -7,6 +7,7 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import model.Produk;
 import model.TargetProduksi;
+import util.Session;
 
 import java.time.LocalDate;
 
@@ -19,11 +20,16 @@ public class DetailProdukController {
     @FXML private Label detailDeskripsi;
     @FXML private Label detailTarget;
     @FXML private Label detailPerforma;
+    @FXML private javafx.scene.control.Button btnEditDetail;
+    @FXML private javafx.scene.control.Button btnHapusDetail;
 
     private ProdukController produkController;
     private int idProduk;
     private Runnable onEdit;
     private Runnable onHapus;
+    
+    // ✅ Session untuk permission check
+    private Session session = Session.getInstance();
 
     public void init(ProdukController produkController, int idProduk,
                      Runnable onEdit, Runnable onHapus) {
@@ -34,7 +40,17 @@ public class DetailProdukController {
     }
 
     @FXML
-    public void initialize() {}
+    public void initialize() {
+        // ✅ Permission check: Sembunyikan tombol edit & hapus jika SUPERVISOR
+        if (btnEditDetail != null && btnHapusDetail != null) {
+            if (session.isSupervisor()) {
+                btnEditDetail.setVisible(false);
+                btnEditDetail.setManaged(false);
+                btnHapusDetail.setVisible(false);
+                btnHapusDetail.setManaged(false);
+            }
+        }
+    }
 
     public void isiData(Produk produk) {
         detailNama.setText(produk.getNama());

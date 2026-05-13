@@ -32,7 +32,7 @@ sourceSets {
     }
 }
 
-// 3. Hapus bagian jvmArgs manual tadi, biarkan plugin yang bekerja
+// 3. Konfigurasi application
 application {
     mainClass = 'MainApp'
 }
