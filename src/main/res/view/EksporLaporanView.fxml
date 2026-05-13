@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.Insets?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="view.EksporLaporanView"
+            style="-fx-background-color: #0a1f1f; -fx-font-family: 'Plus Jakarta Sans';">
+
+    <top>
+        <VBox spacing="8" style="-fx-padding: 24 32 16 32;">
+            <Label text="Ekspor Laporan Produksi"
+                   style="-fx-text-fill: #00e5a0; -fx-font-size: 28; -fx-font-weight: bold;"/>
+            <Label text="Pilih produk dan rentang waktu untuk mencetak laporan (PDF/Excel)"
+                   style="-fx-text-fill: #5a8a8a; -fx-font-size: 14;"/>
+        </VBox>
+    </top>
+
+    <center>
+        <ScrollPane fitToWidth="true" style="-fx-background: transparent; -fx-background-color: transparent;">
+            <VBox spacing="24" style="-fx-padding: 0 32 32 32;">
+
+                <VBox spacing="20" style="-fx-background-color: #132929; -fx-padding: 24; -fx-background-radius: 12; -fx-border-color: #1a3a3a; -fx-border-radius: 12;">
+
+                    <Label text="Konfigurasi Laporan" style="-fx-text-fill: white; -fx-font-size: 18; -fx-font-weight: bold;"/>
+
+                    <GridPane hgap="20" vgap="15">
+                        <columnConstraints>
+                            <ColumnConstraints percentWidth="50"/>
+                            <ColumnConstraints percentWidth="50"/>
+                        </columnConstraints>
+
+                        <VBox spacing="8" GridPane.columnIndex="0" GridPane.rowIndex="0">
+                            <Label text="Pilih Produk" style="-fx-text-fill: #00e5a0; -fx-font-weight: bold;"/>
+                            <ListView fx:id="listPilihProduk" prefHeight="150"
+                                      style="-fx-background-color: #0a1f1f; -fx-control-inner-background: #0a1f1f; -fx-background-radius: 8; -fx-border-color: #1a3a3a; -fx-text-fill: white;"/>
+                            <CheckBox fx:id="checkPilihSemua" text="Pilih Semua Produk" style="-fx-text-fill: #5a8a8a;"/>
+                        </VBox>
+
+                        <VBox spacing="15" GridPane.columnIndex="1" GridPane.rowIndex="0">
+                            <VBox spacing="8">
+                                <Label text="Tanggal Mulai" style="-fx-text-fill: #00e5a0; -fx-font-weight: bold;"/>
+                                <DatePicker fx:id="dpMulai" maxWidth="Infinity"
+                                            style="-fx-background-color: #0a1f1f; -fx-control-inner-background: #0a1f1f;"/>
+                            </VBox>
+
+                            <VBox spacing="8">
+                                <Label text="Tanggal Selesai" style="-fx-text-fill: #00e5a0; -fx-font-weight: bold;"/>
+                                <DatePicker fx:id="dpSelesai" maxWidth="Infinity"
+                                            style="-fx-background-color: #0a1f1f;"/>
+                            </VBox>
+                        </VBox>
+                    </GridPane>
+                </VBox>
+
+                <HBox spacing="16" alignment="CENTER_RIGHT">
+                    <Button fx:id="btnPreview" text="Preview Data" onAction="#handlePreview"
+                            style="-fx-background-color: transparent; -fx-text-fill: #00e5a0; -fx-border-color: #00e5a0; -fx-border-radius: 8; -fx-padding: 12 24; -fx-font-weight: bold;"/>
+
+                    <MenuButton text="Ekspor Sekarang" fx:id="menuEkspor"
+                                style="-fx-background-color: #00e5a0; -fx-text-fill: #0a1f1f; -fx-font-weight: bold; -fx-background-radius: 8; -fx-padding: 8 16;">
+                        <items>
+                            <MenuItem text="Format PDF (.pdf)" onAction="#handleEksporPDF"/>
+                            <MenuItem text="Format Excel (.xlsx)" onAction="#handleEksporExcel"/>
+                        </items>
+                    </MenuButton>
+                </HBox>
+
+                <VBox fx:id="containerPreview" spacing="12" visible="false">
+                    <Label text="Preview Ringkasan" style="-fx-text-fill: white; -fx-font-size: 16; -fx-font-weight: bold;"/>
+                    <TableView fx:id="tablePreview" prefHeight="300"
+                               style="-fx-background-color: #132929; -fx-border-color: #1a3a3a;">
+                    </TableView>
+                </VBox>
+
+            </VBox>
+        </ScrollPane>
+    </center>
+
+</BorderPane>

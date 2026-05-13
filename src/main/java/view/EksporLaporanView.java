@@ -74,8 +74,7 @@ public class EksporLaporanView {
         comboFormat.getItems().addAll("PDF", "Excel (.xlsx)");
         comboFormat.setValue("PDF");
 
-        // Gunakan produkManager (karena repository sudah dimerge)
-        semuaProduk = produkManager.getAllProduk();
+        semuaProduk = Produk.getAll();
         tampilkanListProduk(semuaProduk);
 
         fieldCariProduk.textProperty().addListener((obs, lama, baru) -> filterProduk(baru));
