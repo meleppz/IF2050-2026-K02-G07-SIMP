@@ -43,7 +43,7 @@
                 </HBox>
 
                 <ScrollPane fitToHeight="true" vbarPolicy="NEVER" hbarPolicy="AS_NEEDED"
-                            style="-fx-background-color: #132929; -fx-text-fill: white; -fx-text-base-color: white; -fx-background-radius: 8; -fx-padding: 8;">
+                            style="-fx-background-color: #132929; -fx-text-fill: white; -fx-text-base-color: white; -fx-background-radius: 8; -fx-padding: 8;"/>
                     <HBox fx:id="listProdukHorizontal" spacing="15" style="-fx-padding: 5 0;">
                     </HBox>
                 </ScrollPane>
