@@ -1,5 +1,6 @@
 package view;
 
+
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -41,6 +42,7 @@ public class DashboardView extends VBox {
     private StatistikService statistikService;
     private ProdukController produkController;
 
+    /*
     // =========================================================
     // Constructor
     // =========================================================
@@ -54,7 +56,9 @@ public class DashboardView extends VBox {
         buildUI();
         showDashboard(); // langsung load data saat dibuka
     }
+     */
 
+    /*
     // =========================================================
     // 1. showDashboard() — PUBLIC
     //    Menampilkan dashboard: grafik tren, tabel rekapitulasi,
@@ -310,7 +314,7 @@ public class DashboardView extends VBox {
             default                  -> "minggu";
         };
     }
-
+*/
 
     // Getters & Setters
     public String getRentangWaktu()               { return rentangWaktu; }
