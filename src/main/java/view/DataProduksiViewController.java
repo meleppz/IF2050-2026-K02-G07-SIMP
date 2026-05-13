@@ -42,6 +42,7 @@ public class DataProduksiViewController {
     @FXML private TextField fieldJumlahProduksi;
     @FXML private TextField fieldJumlahDefect;
     @FXML private TextField fieldCatatan;
+    @FXML private Label lblNamaPengguna;
 
     // — data & controller —
     private ProdukController produkController;
@@ -56,7 +57,24 @@ public class DataProduksiViewController {
     @FXML
     public void initialize() {
         produkController = new ProdukController();
+
+        setupHeaderUser();
+
         tampilkanListProduksi(produkController.getAllProduksiHarian());
+    }
+
+    private void setupHeaderUser() {
+        if (session.isLoggedIn()) {
+            // Mengambil peran dari objek Pengguna (misal: "OPERATOR" atau "SUPERVISOR")
+            String peran = session.getPenggunaAktif().getPeran().toString();
+            lblNamaPengguna.setText(peran);
+
+            // Opsional: Logging ke konsol untuk mempermudah debugging
+            System.out.println("[LOG] Login as: " + peran);
+            System.out.println("[LOG] Is Operator: " + session.isOperator());
+        } else {
+            lblNamaPengguna.setText("Guest");
+        }
     }
 
     // =========================================================

@@ -73,7 +73,27 @@ public class MainViewController {
 
     @FXML
     public void klikKeluar() {
+        util.Session.getInstance().logout();
+        System.out.println("[LOG] Pengguna telah logout.");
 
+        try {
+            // 2. Load halaman Login
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/LoginView.fxml"));
+            javafx.scene.Parent root = loader.load();
+
+            // 3. Tampilkan stage Login baru
+            Stage loginStage = new Stage();
+            loginStage.setTitle("Login - SIMP");
+            loginStage.setScene(new javafx.scene.Scene(root));
+            loginStage.show();
+
+            // 4. Tutup jendela utama saat ini
+            Stage currentStage = (Stage) contentArea.getScene().getWindow();
+            currentStage.close();
+
+        } catch (IOException e) {
+            System.err.println("Gagal memuat halaman login: " + e.getMessage());
+        }
     }
 
     private void loadScreen(String fxmlPath) {

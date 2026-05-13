@@ -17,6 +17,7 @@ import javafx.stage.Stage;
 import model.ProduksiHarian;
 import model.Produk;
 import service.StatistikService;
+import util.Session;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -127,11 +128,23 @@ public class DashboardView extends BorderPane {
         lblGreeting.setFont(fReg12);
         lblGreeting.setStyle("-fx-text-fill: " + TEXT_MUTED + ";");
 
-        Label lblNama = new Label("Lorem Ipsum"); // TODO: connect to user
-        lblNama.setFont(fBold14);
-        lblNama.setStyle("-fx-text-fill: " + TEXT_WHITE + ";");
+        // 1. Tentukan teks peran berdasarkan pengecekan boolean di Session
+        String peranTeks = "GUEST";
+        util.Session session = util.Session.getInstance();
 
-        VBox greetingBox = new VBox(2, lblGreeting, lblNama);
+        if (session.isSupervisor()) {
+            peranTeks = "SUPERVISOR";
+        } else if (session.isOperator()) {
+            peranTeks = "OPERATOR";
+        }
+
+        // 2. Ganti Lorem Ipsum langsung ke peranTeks
+        Label lblRole = new Label(peranTeks);
+        lblRole.setFont(fBold14);
+        lblRole.setStyle("-fx-text-fill: " + ACCENT + ";");
+
+        // 3. Masukkan ke dalam Box
+        VBox greetingBox = new VBox(2, lblGreeting, lblRole);
         greetingBox.setAlignment(Pos.CENTER_RIGHT);
 
         StackPane avatar = new StackPane();
@@ -196,7 +209,7 @@ public class DashboardView extends BorderPane {
         Label lblLihat = new Label("Lihat Data Produksi →");
         lblLihat.setFont(fReg13);
         lblLihat.setStyle("-fx-text-fill: " + ACCENT + "; -fx-cursor: hand;");
-        lblLihat.setOnMouseClicked(e -> navigasiKeProdukView());
+        lblLihat.setOnMouseClicked(e -> navigasiKeDataProduksiView());
         lblLihat.setOnMouseEntered(e -> lblLihat.setStyle(
                 "-fx-text-fill: white; -fx-cursor: hand; -fx-underline: true;"
         ));
@@ -496,6 +509,13 @@ public class DashboardView extends BorderPane {
             mainController.navigasiProduk();
         }
     }
+
+    private void navigasiKeDataProduksiView() {
+        if (mainController != null) {
+            mainController.navigasiDataProduksi();
+        }
+    }
+
 
     // =========================================================
     // REFRESH DATA
