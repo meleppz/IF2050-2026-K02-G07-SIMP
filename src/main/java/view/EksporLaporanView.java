@@ -30,7 +30,7 @@ public class EksporLaporanView {
     @FXML private VBox panelHasil;
 
     @FXML private TextField fieldCariProduk;
-    @FXML private VBox listProdukContainer;
+    @FXML private FlowPane listProdukContainer;
     @FXML private Button btnSemuaProduk;
 
     @FXML private DatePicker fieldTglMulai;
@@ -74,6 +74,7 @@ public class EksporLaporanView {
         comboFormat.getItems().addAll("PDF", "Excel (.xlsx)");
         comboFormat.setValue("PDF");
 
+        // Gunakan produkManager (karena repository sudah dimerge)
         semuaProduk = Produk.getAll();
         tampilkanListProduk(semuaProduk);
 
@@ -183,58 +184,60 @@ public class EksporLaporanView {
 
     @FXML
     public void klikBuatLaporan() {
+        // 1. Validasi awal
         if (!semuaProdukDipilih && idProdukTerpilih.isEmpty()) {
-            tampilkanError("Pilih minimal satu produk atau klik 'Semua Produk'.");
+            tampilkanError("Pilih minimal satu produk!");
             return;
         }
 
-        LocalDate tglMulai = fieldTglMulai.getValue();
-        LocalDate tglSelesai = fieldTglSelesai.getValue();
-        boolean semuaData = (shortcutAktif == btnSemuaData);
-
-        if (!semuaData) {
-            if (tglMulai == null || tglSelesai == null) {
-                tampilkanError("Isi rentang tanggal atau pilih shortcut waktu.");
-                return;
-            }
-            if (tglMulai.isAfter(tglSelesai)) {
-                tampilkanError("Tanggal mulai tidak boleh setelah tanggal selesai.");
-                return;
-            }
-        }
-
-        formatTerpilih = comboFormat.getValue().startsWith("PDF") ? "pdf" : "xlsx";
+        // 2. Persiapan UI
+        formatTerpilih = comboFormat.getValue().contains("Excel") ? "xlsx" : "pdf";
         tampilkanPanel(panelLoading);
-        progressBar.setProgress(ProgressBar.INDETERMINATE_PROGRESS);
 
-        final LocalDate tglMulaiFinal = semuaData ? null : tglMulai;
-        final LocalDate tglSeleseaiFinal = semuaData ? null : tglSelesai;
+        // FIX: Unbind dulu agar tidak bentrok dengan sisa proses sebelumnya
+        progressBar.progressProperty().unbind();
+        progressBar.setProgress(0);
+
         final List<Integer> idList = semuaProdukDipilih ? new ArrayList<>() : new ArrayList<>(idProdukTerpilih);
+        final LocalDate tglMulai = fieldTglMulai.getValue();
+        final LocalDate tglSelesai = fieldTglSelesai.getValue();
 
+        // 3. Task Proses Background
         Task<Path> task = new Task<>() {
             @Override
             protected Path call() throws Exception {
-                updateProgress(0.3, 1.0);
-                LaporanProduksi laporan = reportController.susunLaporan(idList, tglMulaiFinal, tglSeleseaiFinal);
-                updateProgress(0.7, 1.0);
-                Path path = fileGeneratorService.generate(laporan, formatTerpilih);
-                updateProgress(1.0, 1.0);
-                return path;
+                updateProgress(2, 10); // Mulai
+
+                // Ambil data
+                LaporanProduksi laporan = reportController.susunLaporan(idList, tglMulai, tglSelesai);
+                updateProgress(5, 10);
+
+                // Generate File (Di sini biasanya Excel error kalau library POI tidak ada)
+                return fileGeneratorService.generate(laporan, formatTerpilih);
             }
         };
 
+        // 4. Handle Succeeded & Failed
         progressBar.progressProperty().bind(task.progressProperty());
+
         task.setOnSucceeded(e -> {
             tempFilePath = task.getValue();
-            Platform.runLater(this::tampilkanHasil);
+            tampilkanHasil();
         });
+
         task.setOnFailed(e -> {
+            tampilkanPanel(panelForm);
             Throwable ex = task.getException();
-            Platform.runLater(() -> {
-                tampilkanPanel(panelForm);
-                tampilkanError("Gagal membuat laporan: " + ex.getMessage());
-            });
+            ex.printStackTrace(); // LIHAT DI TERMINAL ERRORNYA
+
+            String pesan = ex.getMessage();
+            if (pesan != null && pesan.contains("poi")) {
+                tampilkanError("Error Excel: Library Apache POI tidak ditemukan atau korup!");
+            } else {
+                tampilkanError("Gagal ekspor " + formatTerpilih.toUpperCase() + ": " + pesan);
+            }
         });
+
         new Thread(task).start();
     }
 

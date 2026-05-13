@@ -17,8 +17,8 @@ dependencies {
     implementation 'io.github.cdimascio:dotenv-java:3.0.0'
 
     // Library buat bikin Excel
-    implementation 'org.apache.poi:poi:5.2.3'
     implementation 'org.apache.poi:poi-ooxml:5.2.3'
+    implementation 'org.apache.commons:commons-collections4:4.4'
 
     // Library buat bikin PDF (iText 7)
     implementation 'com.itextpdf:kernel:7.2.5'

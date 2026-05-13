@@ -10,67 +10,72 @@
     <ScrollPane fitToWidth="true" style="-fx-background: transparent; -fx-background-color: transparent;">
         <VBox fx:id="panelForm" spacing="25" style="-fx-padding: 30;">
 
-            <Label text="Ekspor Laporan Produksi" style="-fx-text-fill: #00e5a0; -fx-font-size: 24; -fx-font-weight: bold;"/>
+            <Label text="Ekspor Laporan Produksi" style="-fx-text-fill: #00e5a0; -fx-font-size: 26; -fx-font-weight: bold;"/>
 
-            <VBox spacing="10" style="-fx-background-color: #132929; -fx-padding: 20; -fx-background-radius: 12;">
+            <VBox spacing="12" style="-fx-background-color: #132929; -fx-padding: 24; -fx-background-radius: 12; -fx-border-color: #1e3a3a; -fx-border-radius: 12;">
                 <HBox alignment="CENTER_LEFT" spacing="10">
-                    <Label text="1. Pilih Produk" style="-fx-text-fill: white; -fx-font-size: 16; -fx-font-weight: bold;"/>
+                    <Label text="Pilih Produk" style="-fx-text-fill: white; -fx-font-size: 16; -fx-font-weight: bold;"/>
                     <Region HBox.hgrow="ALWAYS" />
-                    <Button fx:id="btnSemuaProduk" text="Semua Produk" onAction="#klikSemuaProduk"
-                            style="-fx-background-color: transparent; -fx-text-fill: white; -fx-border-color: #5a8a8a; -fx-border-radius: 20; -fx-cursor: hand;"/>
+                    <Button fx:id="btnSemuaProduk" text="Pilih Semua Produk" onAction="#klikSemuaProduk"
+                            style="-fx-background-color: transparent; -fx-text-fill: #00e5a0; -fx-border-color: #00e5a0; -fx-border-radius: 20; -fx-cursor: hand; -fx-font-size: 12;"/>
                 </HBox>
 
                 <TextField fx:id="fieldCariProduk" promptText="Cari nama atau kode produk..."
-                           style="-fx-background-color: #0a1f1f; -fx-text-fill: white; -fx-padding: 12; -fx-background-radius: 8;"/>
+                           style="-fx-background-color: #0a1f1f; -fx-text-fill: white; -fx-padding: 12; -fx-background-radius: 8; -fx-border-color: #1e3a3a;"/>
 
-                <VBox fx:id="listProdukContainer" spacing="5" prefHeight="200" style="-fx-padding: 5 0;"/>
+                <ScrollPane fitToWidth="true" style="-fx-background: transparent; -fx-background-color: transparent;" prefHeight="220">
+                    <FlowPane fx:id="listProdukContainer" hgap="10" vgap="10" style="-fx-padding: 10 0;"
+                              prefWrapLength="800" /> </ScrollPane>
             </VBox>
 
             <HBox spacing="20">
-                <VBox spacing="10" HBox.hgrow="ALWAYS" style="-fx-background-color: #132929; -fx-padding: 20; -fx-background-radius: 12;">
-                    <Label text="2. Rentang Waktu" style="-fx-text-fill: white; -fx-font-size: 16; -fx-font-weight: bold;"/>
-                    <HBox spacing="8" style="-fx-padding: 5 0;">
-                        <Button fx:id="btn7Hari" text="7 Hari" onAction="#klik7Hari" style="-fx-background-color: #1e3a3a; -fx-text-fill: white; -fx-cursor: hand;"/>
-                        <Button fx:id="btn30Hari" text="30 Hari" onAction="#klik30Hari" style="-fx-background-color: #1e3a3a; -fx-text-fill: white; -fx-cursor: hand;"/>
-                        <Button fx:id="btn6Bulan" text="6 Bulan" onAction="#klik6Bulan" style="-fx-background-color: #1e3a3a; -fx-text-fill: white; -fx-cursor: hand;"/>
-                        <Button fx:id="btnSemuaData" text="Semua" onAction="#klikSemuaData" style="-fx-background-color: #1e3a3a; -fx-text-fill: white; -fx-cursor: hand;"/>
+                <VBox spacing="12" HBox.hgrow="ALWAYS" style="-fx-background-color: #132929; -fx-padding: 24; -fx-background-radius: 12; -fx-border-color: #1e3a3a; -fx-border-radius: 12;">
+                    <Label text="Rentang Waktu" style="-fx-text-fill: white; -fx-font-size: 16; -fx-font-weight: bold;"/>
+                    <HBox spacing="8">
+                        <Button fx:id="btn7Hari" text="7 Hari" onAction="#klik7Hari" style="-fx-background-color: #1e3a3a; -fx-text-fill: white; -fx-background-radius: 6;"/>
+                        <Button fx:id="btn30Hari" text="30 Hari" onAction="#klik30Hari" style="-fx-background-color: #1e3a3a; -fx-text-fill: white; -fx-background-radius: 6;"/>
+                        <Button fx:id="btn6Bulan" text="6 Bulan" onAction="#klik6Bulan" style="-fx-background-color: #1e3a3a; -fx-text-fill: white; -fx-background-radius: 6;"/>
+                        <Button fx:id="btnSemuaData" text="Semua" onAction="#klikSemuaData" style="-fx-background-color: #1e3a3a; -fx-text-fill: white; -fx-background-radius: 6;"/>
                     </HBox>
                     <HBox spacing="15">
                         <VBox spacing="5" HBox.hgrow="ALWAYS">
-                            <Label text="Mulai" style="-fx-text-fill: #5a8a8a; -fx-font-size: 11;"/>
-                            <DatePicker fx:id="fieldTglMulai" maxWidth="Infinity" />
+                            <Label text="Dari Tanggal" style="-fx-text-fill: #5a8a8a; -fx-font-size: 11;"/>
+                            <DatePicker fx:id="fieldTglMulai" maxWidth="Infinity" style="-fx-background-color: #0a1f1f;"/>
                         </VBox>
                         <VBox spacing="5" HBox.hgrow="ALWAYS">
-                            <Label text="Selesai" style="-fx-text-fill: #5a8a8a; -fx-font-size: 11;"/>
-                            <DatePicker fx:id="fieldTglSelesai" maxWidth="Infinity" />
+                            <Label text="Sampai Tanggal" style="-fx-text-fill: #5a8a8a; -fx-font-size: 11;"/>
+                            <DatePicker fx:id="fieldTglSelesai" maxWidth="Infinity" style="-fx-background-color: #0a1f1f;"/>
                         </VBox>
                     </HBox>
                 </VBox>
 
-                <VBox spacing="10" prefWidth="300" style="-fx-background-color: #132929; -fx-padding: 20; -fx-background-radius: 12;">
-                    <Label text="3. Format" style="-fx-text-fill: white; -fx-font-size: 16; -fx-font-weight: bold;"/>
-                    <Region prefHeight="10" />
-                    <Label text="Pilih Format File" style="-fx-text-fill: #5a8a8a; -fx-font-size: 11;"/>
-                    <ComboBox fx:id="comboFormat" maxWidth="Infinity" style="-fx-background-color: #0a1f1f; -fx-padding: 5;"/>
+                <VBox spacing="12" prefWidth="350" style="-fx-background-color: #132929; -fx-padding: 24; -fx-background-radius: 12; -fx-border-color: #1e3a3a; -fx-border-radius: 12;">
+                    <Label text="Format Dokumen" style="-fx-text-fill: white; -fx-font-size: 16; -fx-font-weight: bold;"/>
+                    <Region VBox.vgrow="ALWAYS" />
+                    <Label text="Pilih Ekstensi File" style="-fx-text-fill: #5a8a8a; -fx-font-size: 11;"/>
+                    <ComboBox fx:id="comboFormat" maxWidth="Infinity" style="-fx-background-color: #0a1f1f; -fx-text-fill: white;"/>
+                    <Region VBox.vgrow="ALWAYS" />
                 </VBox>
             </HBox>
 
-            <Button text="BUAT LAPORAN SEKARANG" onAction="#klikBuatLaporan" maxWidth="Infinity"
-                    style="-fx-background-color: #00e5a0; -fx-text-fill: #0a1f1f; -fx-font-weight: bold; -fx-font-size: 16; -fx-padding: 15; -fx-background-radius: 12; -fx-cursor: hand;"/>
+            <Button text="BUAT LAPORAN SEKARANG" onAction="#klikBuatLaporan" maxWidth="Infinity" prefHeight="52"
+                    style="-fx-background-color: #00e5a0; -fx-text-fill: #0a1f1f; -fx-font-weight: bold; -fx-font-size: 15; -fx-background-radius: 8; -fx-cursor: hand;"/>
         </VBox>
     </ScrollPane>
 
     <VBox fx:id="panelLoading" alignment="CENTER" spacing="20" visible="false" managed="false">
-        <ProgressBar fx:id="progressBar" prefHeight="10" prefWidth="300" />
-        <Label text="Sedang menyusun data laporan..." style="-fx-text-fill: white;"/>
+        <ProgressBar fx:id="progressBar" prefWidth="300" />
+        <Label text="Sedang memproses data..." style="-fx-text-fill: white;"/>
     </VBox>
 
     <VBox fx:id="panelHasil" alignment="CENTER" spacing="25" visible="false" managed="false">
-        <Label text="Laporan Berhasil Dibuat!" style="-fx-text-fill: #00e5a0; -fx-font-size: 22; -fx-font-weight: bold;"/>
-        <Label fx:id="labelFormatHasil" text="PDF" style="-fx-text-fill: white;"/>
+        <Label text="Laporan Siap Diunduh" style="-fx-text-fill: #00e5a0; -fx-font-size: 22; -fx-font-weight: bold;"/>
+
+        <Label fx:id="labelFormatHasil" text="Format" style="-fx-text-fill: white; -fx-font-size: 16;"/>
+
         <HBox alignment="CENTER" spacing="15">
-            <Button text="Unduh Laporan" onAction="#klikUnduhLaporan" style="-fx-background-color: #00e5a0; -fx-padding: 10 20;"/>
-            <Button text="Kembali" onAction="#klikBuatLaporanLain" style="-fx-background-color: transparent; -fx-text-fill: white; -fx-border-color: white;"/>
+            <Button text="Simpan File" onAction="#klikUnduhLaporan" prefHeight="45" style="-fx-background-color: #00e5a0; -fx-padding: 0 30;"/>
+            <Button text="Buat Lagi" onAction="#klikBuatLaporanLain" prefHeight="45" style="-fx-background-color: transparent; -fx-text-fill: white; -fx-border-color: white; -fx-padding: 0 30;"/>
         </HBox>
     </VBox>
 
