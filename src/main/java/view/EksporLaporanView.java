@@ -2,12 +2,10 @@ package view;
 
 import controller.ReportController;
 import javafx.application.Platform;
-import javafx.beans.value.ChangeListener; // Tambahkan import ini
+import javafx.beans.value.ChangeListener;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.stage.FileChooser;
 import model.LaporanProduksi;
@@ -43,14 +41,8 @@ public class EksporLaporanView {
     @FXML private Button btnSemuaData;
 
     @FXML private ProgressBar progressBar;
-
-    @FXML private ImageView ikonFormatHasil;
     @FXML private Label labelFormatHasil;
 
-    // =========================================================
-    // PERBAIKAN 1: Ganti ProdukRepository menjadi Produk
-    // =========================================================
-    private final Produk produkManager = new Produk();
     private final ReportController reportController = new ReportController();
     private final FileGeneratorService fileGeneratorService = new FileGeneratorService();
 
@@ -62,7 +54,6 @@ public class EksporLaporanView {
     private Path tempFilePath = null;
     private String formatTerpilih = "pdf";
 
-    // Simpan listener sebagai variabel agar bisa di-remove dengan benar
     private final ChangeListener<LocalDate> dateChangeListener = (obs, lama, baru) -> {
         if (baru != null) nonaktifkanShortcut();
     };
@@ -71,18 +62,52 @@ public class EksporLaporanView {
     public void initialize() {
         tampilkanPanel(panelForm);
 
-        comboFormat.getItems().addAll("PDF", "Excel (.xlsx)");
-        comboFormat.setValue("PDF");
+        // Konfigurasi ComboBox agar teks berwarna Putih
+        setupComboBoxFormat();
 
-        // Gunakan produkManager (karena repository sudah dimerge)
         semuaProduk = Produk.getAll();
         tampilkanListProduk(semuaProduk);
 
         fieldCariProduk.textProperty().addListener((obs, lama, baru) -> filterProduk(baru));
 
-        // Tambahkan listener
         fieldTglMulai.valueProperty().addListener(dateChangeListener);
         fieldTglSelesai.valueProperty().addListener(dateChangeListener);
+
+        // Inisialisasi style tombol semua produk
+        btnSemuaProduk.setStyle(styleBtn(false));
+    }
+
+    private void setupComboBoxFormat() {
+        comboFormat.getItems().addAll("PDF", "Excel (.xlsx)");
+        comboFormat.setValue("PDF");
+
+        // Renderer untuk teks yang terpilih di box
+        comboFormat.setButtonCell(new ListCell<>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) setText(null);
+                else {
+                    setText(item);
+                    setStyle("-fx-text-fill: white;");
+                }
+            }
+        });
+
+        // Renderer untuk list pilihan di dalam dropdown
+        comboFormat.setCellFactory(lv -> new ListCell<>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                    setStyle("-fx-background-color: transparent;");
+                } else {
+                    setText(item);
+                    setStyle("-fx-background-color: #132929; -fx-text-fill: white; -fx-padding: 10;");
+                }
+            }
+        });
     }
 
     private void tampilkanListProduk(List<Produk> list) {
@@ -93,15 +118,15 @@ public class EksporLaporanView {
     }
 
     private HBox buatItemProduk(Produk produk) {
+        // Radius 16 pada item produk
         HBox item = new HBox(12);
-        item.setStyle("-fx-padding: 10 14; -fx-cursor: hand; -fx-background-radius: 8;");
+        item.setStyle("-fx-padding: 10 14; -fx-cursor: hand; -fx-background-radius: 16;");
 
         CheckBox cb = new CheckBox();
-        cb.setSelected(idProdukTerpilih.contains(produk.getIdProduk()));
+        cb.setSelected(idProdukTerpilih.contains(produk.getIdProduk()) || semuaProdukDipilih);
         cb.selectedProperty().addListener((obs, lama, baru) -> {
             if (baru) {
-                if (!idProdukTerpilih.contains(produk.getIdProduk()))
-                    idProdukTerpilih.add(produk.getIdProduk());
+                if (!idProdukTerpilih.contains(produk.getIdProduk())) idProdukTerpilih.add(produk.getIdProduk());
             } else {
                 idProdukTerpilih.remove((Integer) produk.getIdProduk());
                 semuaProdukDipilih = false;
@@ -117,8 +142,8 @@ public class EksporLaporanView {
         info.getChildren().addAll(nama, kode);
 
         item.getChildren().addAll(cb, info);
-        item.setOnMouseEntered(e -> item.setStyle("-fx-padding: 10 14; -fx-cursor: hand; -fx-background-color: #1e3a3a; -fx-background-radius: 8;"));
-        item.setOnMouseExited(e -> item.setStyle("-fx-padding: 10 14; -fx-cursor: hand; -fx-background-radius: 8;"));
+        item.setOnMouseEntered(e -> item.setStyle("-fx-padding: 10 14; -fx-cursor: hand; -fx-background-color: #1e3a3a; -fx-background-radius: 16;"));
+        item.setOnMouseExited(e -> item.setStyle("-fx-padding: 10 14; -fx-cursor: hand; -fx-background-radius: 16;"));
         item.setOnMouseClicked(e -> cb.setSelected(!cb.isSelected()));
 
         return item;
@@ -141,8 +166,14 @@ public class EksporLaporanView {
     public void klikSemuaProduk() {
         semuaProdukDipilih = !semuaProdukDipilih;
         btnSemuaProduk.setStyle(styleBtn(semuaProdukDipilih));
-        if (semuaProdukDipilih) idProdukTerpilih.clear();
-        tampilkanListProduk(fieldCariProduk.getText().isEmpty() ? semuaProduk : semuaProduk.stream().filter(p -> p.getNama().toLowerCase().contains(fieldCariProduk.getText().toLowerCase())).toList());
+
+        idProdukTerpilih.clear();
+        if (semuaProdukDipilih) {
+            for (Produk p : semuaProduk) idProdukTerpilih.add(p.getIdProduk());
+        }
+
+        tampilkanListProduk(fieldCariProduk.getText().isEmpty() ? semuaProduk :
+                semuaProduk.stream().filter(p -> p.getNama().toLowerCase().contains(fieldCariProduk.getText().toLowerCase())).toList());
     }
 
     @FXML public void klik7Hari()    { terapkanShortcut(btn7Hari, 7); }
@@ -161,7 +192,6 @@ public class EksporLaporanView {
         LocalDate selesai = LocalDate.now();
         LocalDate mulai = selesai.minusDays(hariKebelakang - 1L);
 
-        // PERBAIKAN 2: Hilangkan error "ambiguous" dengan membuang listener yang benar
         fieldTglMulai.valueProperty().removeListener(dateChangeListener);
         fieldTglMulai.setValue(mulai);
         fieldTglMulai.valueProperty().addListener(dateChangeListener);
@@ -184,58 +214,40 @@ public class EksporLaporanView {
 
     @FXML
     public void klikBuatLaporan() {
-        // 1. Validasi awal
-        if (!semuaProdukDipilih && idProdukTerpilih.isEmpty()) {
+        if (idProdukTerpilih.isEmpty() && !semuaProdukDipilih) {
             tampilkanError("Pilih minimal satu produk!");
             return;
         }
 
-        // 2. Persiapan UI
         formatTerpilih = comboFormat.getValue().contains("Excel") ? "xlsx" : "pdf";
         tampilkanPanel(panelLoading);
 
-        // FIX: Unbind dulu agar tidak bentrok dengan sisa proses sebelumnya
         progressBar.progressProperty().unbind();
         progressBar.setProgress(0);
 
-        final List<Integer> idList = semuaProdukDipilih ? new ArrayList<>() : new ArrayList<>(idProdukTerpilih);
+        final List<Integer> idList = new ArrayList<>(idProdukTerpilih);
         final LocalDate tglMulai = fieldTglMulai.getValue();
         final LocalDate tglSelesai = fieldTglSelesai.getValue();
 
-        // 3. Task Proses Background
         Task<Path> task = new Task<>() {
             @Override
             protected Path call() throws Exception {
-                updateProgress(2, 10); // Mulai
-
-                // Ambil data
+                updateProgress(2, 10);
                 LaporanProduksi laporan = reportController.susunLaporan(idList, tglMulai, tglSelesai);
-                updateProgress(5, 10);
-
-                // Generate File (Di sini biasanya Excel error kalau library POI tidak ada)
+                updateProgress(6, 10);
                 return fileGeneratorService.generate(laporan, formatTerpilih);
             }
         };
 
-        // 4. Handle Succeeded & Failed
         progressBar.progressProperty().bind(task.progressProperty());
-
         task.setOnSucceeded(e -> {
             tempFilePath = task.getValue();
             tampilkanHasil();
         });
-
         task.setOnFailed(e -> {
             tampilkanPanel(panelForm);
-            Throwable ex = task.getException();
-            ex.printStackTrace(); // LIHAT DI TERMINAL ERRORNYA
-
-            String pesan = ex.getMessage();
-            if (pesan != null && pesan.contains("poi")) {
-                tampilkanError("Error Excel: Library Apache POI tidak ditemukan atau korup!");
-            } else {
-                tampilkanError("Gagal ekspor " + formatTerpilih.toUpperCase() + ": " + pesan);
-            }
+            task.getException().printStackTrace();
+            tampilkanError("Gagal ekspor: " + task.getException().getMessage());
         });
 
         new Thread(task).start();
@@ -244,37 +256,48 @@ public class EksporLaporanView {
     @FXML
     public void klikUnduhLaporan() {
         if (tempFilePath == null) return;
+
         FileChooser chooser = new FileChooser();
         chooser.setTitle("Simpan Laporan");
-        chooser.setInitialFileName("laporan_produksi." + formatTerpilih);
+
+        // 1. Tentukan nama file default beserta ekstensinya
+        String namaDefault = "laporan_produksi_" + LocalDate.now();
+        String ekstensi = "xlsx".equals(formatTerpilih) ? ".xlsx" : ".pdf";
+        chooser.setInitialFileName(namaDefault + ekstensi);
+
+        // 2. Tambahkan filter agar user tidak salah simpan format
         if ("pdf".equals(formatTerpilih)) {
-            chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("PDF File", "*.pdf"));
+            chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Dokumen PDF (*.pdf)", "*.pdf"));
         } else {
-            chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Excel File", "*.xlsx"));
+            chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("File Excel (*.xlsx)", "*.xlsx"));
         }
+
         File tujuan = chooser.showSaveDialog(panelHasil.getScene().getWindow());
-        if (tujuan == null) return;
-        try {
-            Files.copy(tempFilePath, tujuan.toPath(), StandardCopyOption.REPLACE_EXISTING);
-            tampilkanInfo("Laporan berhasil disimpan di:\n" + tujuan.getAbsolutePath());
-        } catch (IOException ex) {
-            tampilkanError("Gagal menyimpan file: " + ex.getMessage());
+
+        if (tujuan != null) {
+            try {
+                // 3. Cek lagi, jika user menghapus ekstensi saat mengetik nama file, tambahkan secara manual
+                String path = tujuan.getAbsolutePath();
+                if (!path.toLowerCase().endsWith(ekstensi)) {
+                    tujuan = new File(path + ekstensi);
+                }
+
+                Files.copy(tempFilePath, tujuan.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                tampilkanInfo("Laporan berhasil disimpan di:\n" + tujuan.getName());
+
+            } catch (IOException ex) {
+                tampilkanError("Gagal menyimpan file: " + ex.getMessage());
+            }
         }
     }
 
     @FXML
     public void klikBuatLaporanLain() {
-        if (tempFilePath != null) {
-            try { Files.deleteIfExists(tempFilePath); } catch (IOException ignored) {}
-            tempFilePath = null;
-        }
         idProdukTerpilih.clear();
         semuaProdukDipilih = false;
         btnSemuaProduk.setStyle(styleBtn(false));
-        fieldCariProduk.clear();
         fieldTglMulai.setValue(null);
         fieldTglSelesai.setValue(null);
-        comboFormat.setValue("PDF");
         nonaktifkanShortcut();
         tampilkanListProduk(semuaProduk);
         tampilkanPanel(panelForm);
@@ -289,38 +312,36 @@ public class EksporLaporanView {
     }
 
     private void tampilkanHasil() {
-        if ("pdf".equals(formatTerpilih)) {
-            labelFormatHasil.setText("PDF");
-        } else {
-            labelFormatHasil.setText("Excel (.xlsx)");
-        }
+        labelFormatHasil.setText(formatTerpilih.toUpperCase());
         tampilkanPanel(panelHasil);
     }
 
     private void tampilkanError(String pesan) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setHeaderText("Terjadi Kesalahan");
         alert.setContentText(pesan);
         alert.showAndWait();
     }
 
     private void tampilkanInfo(String pesan) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setHeaderText(null);
         alert.setContentText(pesan);
         alert.showAndWait();
     }
 
+    // =========================================================
+    // STYLE HELPER (Disesuaikan ke Radius 16)
+    // =========================================================
+
     private String styleBtn(boolean aktif) {
-        return aktif ? "-fx-background-color: #00e5a0; -fx-text-fill: #0a1f1f; -fx-background-radius: 20; -fx-padding: 4 16; -fx-cursor: hand;"
-                : "-fx-background-color: transparent; -fx-text-fill: white; -fx-border-color: #5a8a8a; -fx-border-radius: 20; -fx-background-radius: 20; -fx-padding: 4 16; -fx-cursor: hand;";
+        return aktif ? "-fx-background-color: #00e5a0; -fx-text-fill: #0a1f1f; -fx-background-radius: 16; -fx-padding: 4 16; -fx-cursor: hand;"
+                : "-fx-background-color: transparent; -fx-text-fill: white; -fx-border-color: #5a8a8a; -fx-border-radius: 16; -fx-background-radius: 16; -fx-padding: 4 16; -fx-cursor: hand;";
     }
 
     private String styleShortcutAktif() {
-        return "-fx-background-color: #00e5a0; -fx-text-fill: #0a1f1f; -fx-background-radius: 8; -fx-padding: 6 14; -fx-cursor: hand;";
+        return "-fx-background-color: #00e5a0; -fx-text-fill: #0a1f1f; -fx-background-radius: 16; -fx-padding: 6 14; -fx-cursor: hand;";
     }
 
     private String styleShortcutNormal() {
-        return "-fx-background-color: #1e3a3a; -fx-text-fill: white; -fx-background-radius: 8; -fx-padding: 6 14; -fx-cursor: hand;";
+        return "-fx-background-color: #1e3a3a; -fx-text-fill: white; -fx-background-radius: 16; -fx-padding: 6 14; -fx-cursor: hand;";
     }
 }
