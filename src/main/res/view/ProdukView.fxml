@@ -62,34 +62,27 @@
             <!-- SEARCH BAR + FILTER -->
             <HBox spacing="12" alignment="CENTER_LEFT">
 
-                <!-- SEARCH BOX -->
                 <StackPane HBox.hgrow="ALWAYS">
                     <TextField fx:id="fieldCariProduk"
-                               promptText="Cari Produk"
-                               onKeyReleased="#cariProduk"
+                               promptText="Cari nama atau kode produk..."
                                style="-fx-background-color: #132929; -fx-text-fill: white; -fx-prompt-text-fill: #5a8a8a; -fx-background-radius: 8; -fx-padding: 12 48 12 16; -fx-font-size: 14;"/>
-                    <Button style="-fx-background-color: transparent; -fx-cursor: hand; -fx-padding: 0 12 0 0;"
-                            StackPane.alignment="CENTER_RIGHT">
-                        <graphic>
-                            <ImageView fitWidth="18" fitHeight="18" preserveRatio="true">
-                                <image>
-                                    <Image url="/images/icon_search.png"/>
-                                </image>
-                            </ImageView>
-                        </graphic>
-                    </Button>
+                    <ImageView fitWidth="18" fitHeight="18" preserveRatio="true" StackPane.alignment="CENTER_RIGHT">
+                        <StackPane.margin>
+                            <javafx.geometry.Insets right="16"/>
+                        </StackPane.margin>
+                        <image>
+                            <Image url="/images/icon_search.png"/>
+                        </image>
+                    </ImageView>
                 </StackPane>
 
-                <!-- FILTER BUTTON -->
-                <Button style="-fx-background-color: transparent; -fx-cursor: hand; -fx-padding: 0; -fx-min-width: 0; -fx-min-height: 0; -fx-pref-width: 20; -fx-pref-height: 20;">
-                    <graphic>
-                        <ImageView fitWidth="20" fitHeight="20" preserveRatio="true">
-                            <image>
-                                <Image url="/images/icon_filter.png"/>
-                            </image>
-                        </ImageView>
-                    </graphic>
-                </Button>
+                <ComboBox fx:id="comboFilterKategori"
+                          promptText="Semua Kategori"
+                          style="-fx-background-color: #132929; -fx-text-fill: white; -fx-text-base-color: white; -fx-background-radius: 8; -fx-padding: 8;"/>
+
+                <ComboBox fx:id="comboSortProduk"
+                          promptText="Urutkan"
+                          style="-fx-background-color: #132929; -fx-text-fill: white; -fx-text-base-color: white; -fx-background-radius: 8; -fx-padding: 8;"/>
 
             </HBox>
 

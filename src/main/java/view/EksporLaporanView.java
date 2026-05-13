@@ -1,5 +1,9 @@
 package view;
 
+import javafx.scene.control.ProgressIndicator;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import controller.ProdukController;
 import controller.ReportController;
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
@@ -32,19 +36,20 @@ public class EksporLaporanView {
     @FXML private VBox panelHasil;
 
     @FXML private TextField fieldCariProduk;
-    @FXML private HBox listProdukHorizontal; // Pastikan di FXML diganti dari FlowPane ke HBox
+    @FXML private HBox listProdukHorizontal;
     @FXML private Button btnSemuaProduk;
 
     @FXML private DatePicker fieldTglMulai;
     @FXML private DatePicker fieldTglSelesai;
     @FXML private ComboBox<String> comboFormat;
-
+    @FXML private ComboBox<String> comboFilterKategori; // Tambahkan ini
+    @FXML private Label lblNamaPengguna; // Tambahkan ini jika belum ada
     @FXML private Button btn7Hari;
     @FXML private Button btn30Hari;
     @FXML private Button btn6Bulan;
     @FXML private Button btnSemuaData;
 
-    @FXML private ProgressBar progressBar;
+    @FXML private ProgressIndicator progressBar; // Ganti ProgressBar jadi ProgressIndicator
     @FXML private Label labelFormatHasil;
 
     private final ReportController reportController = new ReportController();
@@ -57,6 +62,7 @@ public class EksporLaporanView {
     private Button shortcutAktif = null;
     private Path tempFilePath = null;
     private String formatTerpilih = "pdf";
+    private final ProdukController produkController = new ProdukController();
 
     private final ChangeListener<LocalDate> dateChangeListener = (obs, lama, baru) -> {
         if (baru != null) nonaktifkanShortcut();
@@ -67,12 +73,27 @@ public class EksporLaporanView {
         tampilkanPanel(panelForm);
         setupComboBoxFormat();
 
-        semuaProduk = Produk.getAll();
+        // Ambil data produk menggunakan produkController
+        semuaProduk = produkController.getAllProduk();
+
+        // --- TAMBAHKAN LOGIKA FILTER KATEGORI DI SINI ---
+        if (comboFilterKategori != null) {
+            ObservableList<String> listKategori = FXCollections.observableArrayList("Semua Kategori");
+            semuaProduk.stream()
+                    .map(p -> p.getKategori() != null ? p.getKategori().getNamaKategori() : "-")
+                    .distinct()
+                    .forEach(listKategori::add);
+            comboFilterKategori.setItems(listKategori);
+            comboFilterKategori.getSelectionModel().selectFirst();
+
+            // Listener jika kategori diubah
+            comboFilterKategori.setOnAction(e -> filterProduk(fieldCariProduk.getText()));
+        }
+        // ------------------------------------------------
+
         tampilkanListProduk(semuaProduk);
 
-        // Pencarian tetap berfungsi untuk memfilter list horizontal
         fieldCariProduk.textProperty().addListener((obs, lama, baru) -> {
-            // Hanya filter jika user mengetik manual (bukan diisi otomatis oleh sistem)
             if (fieldCariProduk.isFocused()) {
                 filterProduk(baru);
             }
@@ -80,7 +101,6 @@ public class EksporLaporanView {
 
         fieldTglMulai.valueProperty().addListener(dateChangeListener);
         fieldTglSelesai.valueProperty().addListener(dateChangeListener);
-        btnSemuaProduk.setStyle(styleBtn(false));
     }
 
     private void setupComboBoxFormat() {
@@ -112,27 +132,21 @@ public class EksporLaporanView {
     }
 
     private VBox buatItemProdukHorizontal(Produk produk) {
-        VBox item = new VBox(8); // Spacing antar elemen
+        VBox item = new VBox(8);
         item.setAlignment(Pos.CENTER);
-        // Style card: Radius 16, background gelap, padding rapat
         item.setStyle("-fx-padding: 12; -fx-background-color: #1e3a3a; -fx-background-radius: 16; -fx-min-width: 140; -fx-cursor: hand;");
 
-        // 1. Checkbox (Paling Atas)
         CheckBox cb = new CheckBox();
         cb.setSelected(idProdukTerpilih.contains(produk.getIdProduk()));
 
-        // 2. Gambar Produk (Retrieve Path dari SQL)
         ImageView img = new ImageView();
-        // Gunakan getter getFoto() sesuai contoh suksesmu
         if (produk.getFoto() != null && !produk.getFoto().isEmpty()) {
             try {
-                // Tambahkan "file:" agar JavaFX mengenali path lokal
-                img.setImage(new Image("file:" + produk.getFoto(), true)); // 'true' untuk load background
+                img.setImage(new Image("file:" + produk.getFoto(), true));
             } catch (Exception e) {
                 System.out.println("Gagal load gambar file: " + e.getMessage());
             }
         } else {
-            // Fallback jika tidak ada foto
             try {
                 img.setImage(new Image(getClass().getResourceAsStream("/icons/package.png")));
             } catch (Exception ignored) {}
@@ -141,20 +155,19 @@ public class EksporLaporanView {
         img.setFitHeight(50);
         img.setPreserveRatio(true);
 
-        // 3. Nama Produk
         Label nama = new Label(produk.getNama());
         nama.setStyle("-fx-text-fill: white; -fx-font-size: 13; -fx-font-weight: bold;");
         nama.setWrapText(true);
         nama.setMaxWidth(120);
         nama.setAlignment(Pos.CENTER);
 
-        // 4. ID Produk (Di bawah nama)
-        Label idLabel = new Label("ID: " + produk.getIdProduk());
-        idLabel.setStyle("-fx-text-fill: #00e5a0; -fx-font-size: 10;");
+        // ✅ ID Produk & Kode (agar konsisten dengan page Produk)
+        String kodeLabel = produk.getKode() != null ? produk.getKode() : "-";
+        Label infoLabel = new Label("ID: " + produk.getIdProduk() + " | " + kodeLabel);
+        infoLabel.setStyle("-fx-text-fill: #00e5a0; -fx-font-size: 10;");
 
-        item.getChildren().addAll(cb, img, nama, idLabel);
+        item.getChildren().addAll(cb, img, nama, infoLabel);
 
-        // Logic Pilih
         cb.selectedProperty().addListener((obs, lama, baru) -> {
             if (baru) {
                 if (!idProdukTerpilih.contains(produk.getIdProduk())) idProdukTerpilih.add(produk.getIdProduk());
@@ -163,10 +176,12 @@ public class EksporLaporanView {
                 semuaProdukDipilih = false;
                 btnSemuaProduk.setStyle(styleBtn(false));
             }
-            updateTextFieldStatus();
+            // Update teks pencarian hanya jika tidak sedang fokus mengetik
+            if (!fieldCariProduk.isFocused()) {
+                updateTextFieldStatus();
+            }
         });
 
-        // Supaya satu card bisa diklik
         item.setOnMouseClicked(e -> cb.setSelected(!cb.isSelected()));
 
         return item;
@@ -178,7 +193,6 @@ public class EksporLaporanView {
         } else if (idProdukTerpilih.isEmpty()) {
             fieldCariProduk.setText("");
         } else {
-            // Ambil nama produk berdasarkan ID yang terpilih
             String gabunganNama = semuaProduk.stream()
                     .filter(p -> idProdukTerpilih.contains(p.getIdProduk()))
                     .map(Produk::getNama)
@@ -187,15 +201,26 @@ public class EksporLaporanView {
         }
     }
 
+    // ✅ Fitur Search Multi-Kriteria (Nama, ID, Kode, Kategori)
     private void filterProduk(String keyword) {
-        if (keyword == null || keyword.isEmpty()) {
-            tampilkanListProduk(semuaProduk);
-            return;
-        }
-        String kw = keyword.toLowerCase();
+        String kw = (keyword == null) ? "" : keyword.toLowerCase();
+        String kategoriTerpilih = (comboFilterKategori != null) ? comboFilterKategori.getValue() : "Semua Kategori";
+
         List<Produk> hasil = semuaProduk.stream()
-                .filter(p -> p.getNama().toLowerCase().contains(kw))
+                .filter(p -> {
+                    // Filter Keyword
+                    boolean cocokKeyword = p.getNama().toLowerCase().contains(kw) ||
+                            String.valueOf(p.getIdProduk()).contains(kw) ||
+                            (p.getKode() != null && p.getKode().toLowerCase().contains(kw));
+
+                    // Filter Kategori
+                    String katProduk = p.getKategori() != null ? p.getKategori().getNamaKategori() : "-";
+                    boolean cocokKategori = kategoriTerpilih.equals("Semua Kategori") || katProduk.equals(kategoriTerpilih);
+
+                    return cocokKeyword && cocokKategori;
+                })
                 .toList();
+
         tampilkanListProduk(hasil);
     }
 
