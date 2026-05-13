@@ -183,6 +183,166 @@ public class StatistikService {
     }
 
     // =========================================================
+    // PERFORMANCE CALCULATION FUNCTIONS
+    // =========================================================
+
+    /**
+     * Menghitung performa produk untuk 1 hari (hari ini)
+     * Rumus: (total jumlah produksi - jumlah defect) / target produksi harian per produk
+     *
+     * @param idProduk ID dari produk yang akan dihitung performanya
+     * @param tanggal Tanggal yang akan dihitung
+     * @return Map berisi idProduk, tanggal, target, produksi bersih, dan performa (dalam persen)
+     */
+    public Map<String, Object> getPerforma1Hari(int idProduk, LocalDate tanggal) {
+        Map<String, Object> hasil = new HashMap<>();
+
+        // Ambil data produksi untuk tanggal tersebut
+        List<ProduksiHarian> dataProduksi = ProduksiHarian.getByIdProduk(idProduk).stream()
+                .filter(ph -> ph.getTanggalProduksi().equals(tanggal))
+                .toList();
+
+        // Ambil target produksi untuk produk tersebut
+        TargetProduksi target = TargetProduksi.getAktifPadaTanggal(idProduk, tanggal);
+
+        hasil.put("idProduk", idProduk);
+        hasil.put("tanggal", tanggal.toString());
+
+        if (dataProduksi.isEmpty() || target == null) {
+            hasil.put("target", 0);
+            hasil.put("produksiBersih", 0);
+            hasil.put("performa", 0.0);
+            hasil.put("performaText", "0.00%");
+            hasil.put("keterangan", "Tidak ada data produksi atau target");
+            return hasil;
+        }
+
+        int totalAktual = dataProduksi.stream().mapToInt(ProduksiHarian::getJumlahAktual).sum();
+        int totalDefect = dataProduksi.stream().mapToInt(ProduksiHarian::getJumlahDefect).sum();
+        int produksiBersih = totalAktual - totalDefect;
+        int targetHarian = target.getJumlahTarget() / target.getPeriodeTarget();
+
+        double performa = (targetHarian > 0) ? (produksiBersih / (double) targetHarian) * 100 : 0;
+
+        hasil.put("target", targetHarian);
+        hasil.put("produksiBersih", produksiBersih);
+        hasil.put("performa", Math.round(performa * 100.0) / 100.0);
+        hasil.put("performaText", String.format("%.2f%%", performa));
+
+        return hasil;
+    }
+
+    /**
+     * Menghitung performa rata-rata produk untuk 7 hari terakhir
+     * Rumus: Rata-rata dari performa harian dalam 7 hari
+     *
+     * @param idProduk ID dari produk yang akan dihitung performanya
+     * @param tanggalAkhir Tanggal akhir perhitungan
+     * @return Map berisi idProduk, periode, total produksi, rata-rata performa harian
+     */
+    public Map<String, Object> getPerforma7Hari(int idProduk, LocalDate tanggalAkhir) {
+        LocalDate tanggalAwal = tanggalAkhir.minusDays(6);
+        return calculateAveragePerforma(idProduk, tanggalAwal, tanggalAkhir, "7 Hari");
+    }
+
+    /**
+     * Menghitung performa rata-rata produk untuk 30 hari terakhir
+     * Rumus: Rata-rata dari performa harian dalam 30 hari
+     *
+     * @param idProduk ID dari produk yang akan dihitung performanya
+     * @param tanggalAkhir Tanggal akhir perhitungan
+     * @return Map berisi idProduk, periode, total produksi, rata-rata performa harian
+     */
+    public Map<String, Object> getPerforma30Hari(int idProduk, LocalDate tanggalAkhir) {
+        LocalDate tanggalAwal = tanggalAkhir.minusDays(29);
+        return calculateAveragePerforma(idProduk, tanggalAwal, tanggalAkhir, "30 Hari");
+    }
+
+    /**
+     * Menghitung performa rata-rata produk untuk 3 bulan terakhir
+     * Rumus: Rata-rata dari performa harian dalam 3 bulan
+     *
+     * @param idProduk ID dari produk yang akan dihitung performanya
+     * @param tanggalAkhir Tanggal akhir perhitungan
+     * @return Map berisi idProduk, periode, total produksi, rata-rata performa harian
+     */
+    public Map<String, Object> getPerforma3Bulan(int idProduk, LocalDate tanggalAkhir) {
+        LocalDate tanggalAwal = tanggalAkhir.minusMonths(3);
+        return calculateAveragePerforma(idProduk, tanggalAwal, tanggalAkhir, "3 Bulan");
+    }
+
+    /**
+     * Helper method untuk menghitung rata-rata performa dalam range waktu tertentu
+     *
+     * @param idProduk ID produk
+     * @param tanggalAwal Tanggal awal range
+     * @param tanggalAkhir Tanggal akhir range
+     * @param namaPeriode Nama periode untuk label
+     * @return Map berisi data performa rata-rata
+     */
+    private Map<String, Object> calculateAveragePerforma(int idProduk, LocalDate tanggalAwal,
+                                                          LocalDate tanggalAkhir, String namaPeriode) {
+        Map<String, Object> hasil = new HashMap<>();
+
+        // Ambil data produksi dalam range
+        List<ProduksiHarian> dataProduksi = ProduksiHarian.getByIdProduk(idProduk).stream()
+                .filter(ph -> !ph.getTanggalProduksi().isBefore(tanggalAwal) &&
+                             !ph.getTanggalProduksi().isAfter(tanggalAkhir))
+                .toList();
+
+        // Ambil target produksi
+        TargetProduksi target = TargetProduksi.getAktifPadaTanggal(idProduk, tanggalAkhir);
+
+        hasil.put("idProduk", idProduk);
+        hasil.put("periode", namaPeriode);
+        hasil.put("tanggalAwal", tanggalAwal.toString());
+        hasil.put("tanggalAkhir", tanggalAkhir.toString());
+
+        if (dataProduksi.isEmpty() || target == null) {
+            hasil.put("totalProduksiBersih", 0);
+            hasil.put("targetHarian", 0);
+            hasil.put("rataRataPerforma", 0.0);
+            hasil.put("rataRataPerformaText", "0.00%");
+            hasil.put("jumlahHari", 0);
+            hasil.put("keterangan", "Tidak ada data produksi atau target");
+            return hasil;
+        }
+
+        // Kelompokkan data per tanggal untuk menghitung performa harian
+        Map<LocalDate, List<ProduksiHarian>> perTanggal = dataProduksi.stream()
+                .collect(Collectors.groupingBy(ProduksiHarian::getTanggalProduksi));
+
+        int targetHarian = target.getJumlahTarget() / target.getPeriodeTarget();
+        int jumlahHari = perTanggal.size();
+        double totalPerforma = 0;
+        int totalProduksiBersih = 0;
+
+        // Hitung performa untuk setiap hari
+        for (List<ProduksiHarian> dataHari : perTanggal.values()) {
+            int totalAktual = dataHari.stream().mapToInt(ProduksiHarian::getJumlahAktual).sum();
+            int totalDefect = dataHari.stream().mapToInt(ProduksiHarian::getJumlahDefect).sum();
+            int produksiBersih = totalAktual - totalDefect;
+
+            totalProduksiBersih += produksiBersih;
+
+            // Performa hari ini
+            double performaHari = (targetHarian > 0) ? (produksiBersih / (double) targetHarian) * 100 : 0;
+            totalPerforma += performaHari;
+        }
+
+        // Hitung rata-rata performa
+        double rataRataPerforma = (jumlahHari > 0) ? totalPerforma / jumlahHari : 0;
+
+        hasil.put("totalProduksiBersih", totalProduksiBersih);
+        hasil.put("targetHarian", targetHarian);
+        hasil.put("jumlahHari", jumlahHari);
+        hasil.put("rataRataPerforma", Math.round(rataRataPerforma * 100.0) / 100.0);
+        hasil.put("rataRataPerformaText", String.format("%.2f%%", rataRataPerforma));
+
+        return hasil;
+    }
+
+    // =========================================================
     // PUBLIC WRAPPER — dipanggil dari DashboardView
     // =========================================================
 
@@ -285,6 +445,7 @@ public class StatistikService {
     public Map<String, Object> getDefectTerbanyakDariData(List<ProduksiHarian> data) {
         return countDefectTerbanyak(data);
     }
+
     // Getters & Setters
     public String getKriteriaUrutan() { return kriteriaUrutan; }
     public void setKriteriaUrutan(String kriteriaUrutan) { this.kriteriaUrutan = kriteriaUrutan; }

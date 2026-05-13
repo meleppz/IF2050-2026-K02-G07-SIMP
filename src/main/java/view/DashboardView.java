@@ -401,36 +401,61 @@ public class DashboardView extends BorderPane {
         return box;
     }
 
-    private VBox buildPerformingCard(String judul, VBox tableBox) {
-        VBox card = new VBox(12);
-        card.setPadding(new Insets(16));
-        card.setStyle("-fx-background-color: " + BG_CARD + "; -fx-background-radius: 12;");
+     private VBox buildPerformingCard(String judul, VBox tableBox) {
+         VBox card = new VBox(12);
+         card.setPadding(new Insets(16));
+         card.setStyle("-fx-background-color: " + BG_CARD + "; -fx-background-radius: 12;");
 
-        HBox header = new HBox(8);
-        header.setAlignment(Pos.CENTER_LEFT);
-        Label lblIcon  = new Label(judul.contains("TOP") ? "📈" : "📉");
-        Label lblJudul = new Label(judul);
-        lblJudul.setFont(fBold14);
-        lblJudul.setStyle("-fx-text-fill: " + TEXT_WHITE + ";");
-        header.getChildren().addAll(lblIcon, lblJudul);
+         HBox header = new HBox(8);
+         header.setAlignment(Pos.CENTER_LEFT);
+         Label lblIcon  = new Label(judul.contains("TOP") ? "📈" : "📉");
+         Label lblJudul = new Label(judul);
+         lblJudul.setFont(fBold14);
+         lblJudul.setStyle("-fx-text-fill: " + TEXT_WHITE + ";");
 
-        // Header kolom
-        HBox tabelHeader = new HBox();
-        tabelHeader.setPadding(new Insets(8, 0, 8, 0));
-        tabelHeader.setStyle("-fx-border-color: " + BG_CARD2 + "; -fx-border-width: 0 0 1 0;");
-        String[] cols   = {"ID", "Produk", "Total Defect", "Total Produksi", "Performa"};
-        double[] widths = {80, 220, 130, 150, 100};
-        for (int i = 0; i < cols.length; i++) {
-            Label lbl = new Label(cols[i]);
-            lbl.setFont(fReg12);
-            lbl.setStyle("-fx-text-fill: " + TEXT_MUTED + ";");
-            lbl.setPrefWidth(widths[i]);
-            tabelHeader.getChildren().add(lbl);
-        }
+         Region spacer = new Region();
+         HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        card.getChildren().addAll(header, tabelHeader, tableBox);
-        return card;
-    }
+         // Tombol filter periode
+         ComboBox<String> cmbPeriode = new ComboBox<>();
+         cmbPeriode.getItems().addAll("Periode Filter", "7 Hari", "30 Hari", "3 Bulan");
+         cmbPeriode.setValue("Periode Filter");
+         cmbPeriode.setStyle(
+             "-fx-background-color: " + BG_CARD2 + ";" +
+             "-fx-text-fill: " + TEXT_WHITE + ";" +
+             "-fx-control-inner-background: " + BG_CARD2 + ";" +
+             "-fx-background-radius: 6;" +
+             "-fx-padding: 6 12;"
+         );
+         cmbPeriode.setPrefWidth(140);
+
+         header.getChildren().addAll(lblIcon, lblJudul, spacer, cmbPeriode);
+
+         // Header kolom
+         HBox tabelHeader = new HBox();
+         tabelHeader.setPadding(new Insets(8, 0, 8, 0));
+         tabelHeader.setStyle("-fx-border-color: " + BG_CARD2 + "; -fx-border-width: 0 0 1 0;");
+         String[] cols   = {"ID", "Produk", "Total Defect", "Total Produksi", "Performa"};
+         double[] widths = {80, 220, 130, 150, 100};
+         for (int i = 0; i < cols.length; i++) {
+             Label lbl = new Label(cols[i]);
+             lbl.setFont(fReg12);
+             lbl.setStyle("-fx-text-fill: " + TEXT_MUTED + ";");
+             lbl.setPrefWidth(widths[i]);
+             tabelHeader.getChildren().add(lbl);
+         }
+
+         // Event listener untuk perubahan periode
+         cmbPeriode.setOnAction(e -> {
+             String periode = cmbPeriode.getValue();
+             if (!periode.equals("Periode Filter")) {
+                 updatePerformingTablesWithPeriode(tableBox, judul.contains("TOP"), periode);
+             }
+         });
+
+         card.getChildren().addAll(header, tabelHeader, tableBox);
+         return card;
+     }
 
     // ─── RIGHT PANEL ──────────────────────────────────────────
     private VBox buildRightPanel() {
@@ -615,29 +640,123 @@ public class DashboardView extends BorderPane {
         }
     }
 
-    private void updatePerformingTables(List<ProduksiHarian> data) {
-        Map<Integer, int[]> perProduk = new LinkedHashMap<>();
-        for (ProduksiHarian ph : data) {
-            perProduk.computeIfAbsent(ph.getIdProduk(), k -> new int[2]);
-            perProduk.get(ph.getIdProduk())[0] += ph.getJumlahAktual();
-            perProduk.get(ph.getIdProduk())[1] += ph.getJumlahDefect();
-        }
+     private void updatePerformingTables(List<ProduksiHarian> data) {
+         Map<Integer, int[]> perProduk = new LinkedHashMap<>();
+         for (ProduksiHarian ph : data) {
+             perProduk.computeIfAbsent(ph.getIdProduk(), k -> new int[2]);
+             perProduk.get(ph.getIdProduk())[0] += ph.getJumlahAktual();
+             perProduk.get(ph.getIdProduk())[1] += ph.getJumlahDefect();
+         }
 
-        List<Map.Entry<Integer, int[]>> sorted = new ArrayList<>(perProduk.entrySet());
-        sorted.sort((a, b) -> {
-            double pA = a.getValue()[0] > 0 ? (1 - a.getValue()[1] / (double) a.getValue()[0]) * 100 : 0;
-            double pB = b.getValue()[0] > 0 ? (1 - b.getValue()[1] / (double) b.getValue()[0]) * 100 : 0;
-            return Double.compare(pB, pA);
-        });
+         List<Map.Entry<Integer, int[]>> sorted = new ArrayList<>(perProduk.entrySet());
+         sorted.sort((a, b) -> {
+             double pA = a.getValue()[0] > 0 ? (1 - a.getValue()[1] / (double) a.getValue()[0]) * 100 : 0;
+             double pB = b.getValue()[0] > 0 ? (1 - b.getValue()[1] / (double) b.getValue()[0]) * 100 : 0;
+             return Double.compare(pB, pA);
+         });
 
-        topPerformingBox.getChildren().clear();
-        sorted.stream().limit(3).forEach(e -> topPerformingBox.getChildren().add(buildTabelRow(e)));
+         topPerformingBox.getChildren().clear();
+         sorted.stream().limit(3).forEach(e -> topPerformingBox.getChildren().add(buildTabelRow(e)));
 
-        worstPerformingBox.getChildren().clear();
-        List<Map.Entry<Integer, int[]>> worst = new ArrayList<>(sorted);
-        Collections.reverse(worst);
-        worst.stream().limit(3).forEach(e -> worstPerformingBox.getChildren().add(buildTabelRow(e)));
-    }
+         worstPerformingBox.getChildren().clear();
+         List<Map.Entry<Integer, int[]>> worst = new ArrayList<>(sorted);
+         Collections.reverse(worst);
+         worst.stream().limit(3).forEach(e -> worstPerformingBox.getChildren().add(buildTabelRow(e)));
+     }
+
+     /**
+      * Update tabel performa berdasarkan periode yang dipilih
+      * Menampilkan performa 7 hari, 30 hari, atau 3 bulan untuk setiap produk
+      */
+     private void updatePerformingTablesWithPeriode(VBox tableBox, boolean isTop, String periode) {
+         tableBox.getChildren().clear();
+
+         // Ambil semua produk
+         List<Produk> allProducts = produkController.getAllProduk();
+         if (allProducts == null || allProducts.isEmpty()) {
+             return;
+         }
+
+         // Hitung performa untuk setiap produk berdasarkan periode
+         Map<Integer, Double> performaMap = new LinkedHashMap<>();
+         LocalDate tanggalAkhir = LocalDate.now();
+
+         for (Produk produk : allProducts) {
+             Map<String, Object> performaData = null;
+
+             if (periode.equals("7 Hari")) {
+                 performaData = statistikService.getPerforma7Hari(produk.getIdProduk(), tanggalAkhir);
+             } else if (periode.equals("30 Hari")) {
+                 performaData = statistikService.getPerforma30Hari(produk.getIdProduk(), tanggalAkhir);
+             } else if (periode.equals("3 Bulan")) {
+                 performaData = statistikService.getPerforma3Bulan(produk.getIdProduk(), tanggalAkhir);
+             }
+
+             if (performaData != null) {
+                 Object performaObj = performaData.get("rataRataPerforma");
+                 if (performaObj != null) {
+                     double performa = ((Number) performaObj).doubleValue();
+                     performaMap.put(produk.getIdProduk(), performa);
+                 }
+             }
+         }
+
+         // Sort berdasarkan performa
+         List<Map.Entry<Integer, Double>> sorted = new ArrayList<>(performaMap.entrySet());
+         sorted.sort((a, b) -> {
+             if (isTop) {
+                 return Double.compare(b.getValue(), a.getValue()); // Descending untuk TOP
+             } else {
+                 return Double.compare(a.getValue(), b.getValue()); // Ascending untuk WORST
+             }
+         });
+
+         // Tampilkan 3 produk terbaik atau terburuk
+         sorted.stream().limit(3).forEach(entry -> {
+             int idProduk = entry.getKey();
+             double performa = entry.getValue();
+
+             Produk p = produkController.getProdukById(idProduk);
+             String nama = p != null ? p.getNama() : "Produk #" + idProduk;
+             String kode = p != null && p.getKode() != null ? p.getKode() : String.valueOf(idProduk);
+
+             // Ambil data periode untuk ditampilkan
+             Map<String, Object> performaData = null;
+             if (periode.equals("7 Hari")) {
+                 performaData = statistikService.getPerforma7Hari(idProduk, tanggalAkhir);
+             } else if (periode.equals("30 Hari")) {
+                 performaData = statistikService.getPerforma30Hari(idProduk, tanggalAkhir);
+             } else if (periode.equals("3 Bulan")) {
+                 performaData = statistikService.getPerforma3Bulan(idProduk, tanggalAkhir);
+             }
+
+             int totalProduksi = 0;
+             int totalDefect = 0;
+
+             if (performaData != null) {
+                 Object totalBersihObj = performaData.get("totalProduksiBersih");
+                 if (totalBersihObj != null) {
+                     totalProduksi = ((Number) totalBersihObj).intValue();
+                 }
+             }
+
+             HBox row = new HBox();
+             row.setPadding(new Insets(10, 0, 10, 0));
+             row.setStyle("-fx-border-color: " + BG_CARD2 + "; -fx-border-width: 0 0 1 0;");
+
+             double[] widths = {80, 220, 130, 150, 100};
+             String[] values = {kode, nama, String.valueOf(totalDefect), String.valueOf(totalProduksi), String.format("%.2f%%", performa)};
+
+             for (int i = 0; i < values.length; i++) {
+                 Label lbl = new Label(values[i]);
+                 lbl.setFont(fReg13);
+                 lbl.setStyle("-fx-text-fill: " + TEXT_WHITE + ";");
+                 lbl.setPrefWidth(widths[i]);
+                 row.getChildren().add(lbl);
+             }
+             tableBox.getChildren().add(row);
+         });
+     }
 
     private HBox buildTabelRow(Map.Entry<Integer, int[]> entry) {
         int idProduk = entry.getKey();
