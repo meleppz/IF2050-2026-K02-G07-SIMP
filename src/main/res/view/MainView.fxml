@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="view.MainViewController"
+            style="-fx-background-color: #0a1f1f; -fx-font-family: 'Plus Jakarta Sans';"
+            prefWidth="1280" prefHeight="900">
+
+    <!-- SIDEBAR -->
+    <left>
+        <VBox prefWidth="210"
+              style="-fx-background-color: #061414; -fx-padding: 24 16 24 16;"
+              spacing="8">
+
+            <!-- LOGO -->
+            <ImageView fx:id="logoImage"
+                       fitWidth="120" fitHeight="60"
+                       preserveRatio="true"
+                       style="-fx-padding: 0 0 24 0;"/>
+
+            <Region prefHeight="40"/>
+
+            <!-- MENU -->
+            <Button fx:id="btnDashboard"
+                    text="  Dashboard"
+                    maxWidth="Infinity"
+                    onAction="#navigasiDashboard"
+                    style="-fx-background-color: transparent; -fx-text-fill: white; -fx-font-size: 14; -fx-alignment: CENTER_LEFT; -fx-background-radius: 8; -fx-padding: 12 16;"/>
+
+            <Button fx:id="btnProduk"
+                    text="  Produk"
+                    maxWidth="Infinity"
+                    onAction="#navigasiProduk"
+                    style="-fx-background-color: #1e3a3a; -fx-text-fill: white; -fx-font-size: 14; -fx-font-weight: bold; -fx-alignment: CENTER_LEFT; -fx-background-radius: 8; -fx-padding: 12 16;"/>
+
+            <Button fx:id="btnDataProduksi"
+                    text="  Data Produksi"
+                    maxWidth="Infinity"
+                    onAction="#navigasiDataProduksi"
+                    style="-fx-background-color: transparent; -fx-text-fill: white; -fx-font-size: 14; -fx-alignment: CENTER_LEFT; -fx-background-radius: 8; -fx-padding: 12 16;"/>
+
+            <Button fx:id="btnBuatLaporan"
+                    text="  Buat Laporan"
+                    maxWidth="Infinity"
+                    onAction="#navigasiBuatLaporan"
+                    style="-fx-background-color: transparent; -fx-text-fill: white; -fx-font-size: 14; -fx-alignment: CENTER_LEFT; -fx-background-radius: 8; -fx-padding: 12 16;"/>
+
+            <!-- SPACER -->
+            <Region VBox.vgrow="ALWAYS"/>
+
+            <!-- TOMBOL KELUAR -->
+            <Button text="  Keluar"
+                    maxWidth="Infinity"
+                    onAction="#klikKeluar"
+                    style="-fx-background-color: #00e5a0; -fx-text-fill: #0a1f1f; -fx-font-size: 14; -fx-font-weight: bold; -fx-alignment: CENTER_LEFT; -fx-background-radius: 8; -fx-padding: 12 16;"/>
+        </VBox>
+    </left>
+
+    <!-- CONTENT AREA -->
+    <center>
+        <StackPane fx:id="contentArea"/>
+    </center>
+
+</BorderPane>
