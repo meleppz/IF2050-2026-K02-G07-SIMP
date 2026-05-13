@@ -11,7 +11,7 @@ import javafx.scene.layout.*;
 import javafx.stage.FileChooser;
 import model.LaporanProduksi;
 import model.Produk;
-import repository.ProdukRepository;
+import model.Produk;
 import service.FileGeneratorService;
 
 import java.io.File;

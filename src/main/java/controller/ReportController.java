@@ -4,43 +4,32 @@ import model.LaporanProduksi;
 import model.Produk;
 import model.ProduksiHarian;
 import model.TargetProduksi;
-import repository.ProdukRepository;
 
 import java.time.LocalDate;
 import java.util.*;
 
 /**
- * ReportController bertanggung jawab mengumpulkan data dari repository/model,
+ * ReportController bertanggung jawab mengumpulkan data dari model Produk,
  * mengolahnya menjadi struktur LaporanProduksi, lalu menyerahkan ke FileGeneratorService.
- *
- * Kelas ini TIDAK tahu soal JavaFX — murni logika bisnis.
  */
 public class ReportController {
 
-    private final ProdukRepository produkRepository;
+    // Menggunakan instance Produk karena repository sudah dimerge ke dalam kelas Produk
+    private final Produk produkManager;
 
     public ReportController() {
-        this.produkRepository = new ProdukRepository();
+        this.produkManager = new Produk();
     }
 
     // =========================================================
     // ENTRY POINT — dipanggil dari EksporLaporanView
     // =========================================================
 
-    /**
-     * Mengumpulkan dan menyusun data laporan berdasarkan filter.
-     *
-     * @param idProdukList  list id produk yang dipilih user. Jika null atau kosong = semua produk.
-     * @param tglMulai      tanggal awal rentang laporan
-     * @param tglSelesai    tanggal akhir rentang laporan
-     * @return LaporanProduksi yang siap diserahkan ke FileGeneratorService
-     * @throws IllegalArgumentException jika tidak ada data sama sekali
-     */
     public LaporanProduksi susunLaporan(List<Integer> idProdukList,
                                         LocalDate tglMulai,
                                         LocalDate tglSelesai) {
 
-        // 1. Ambil data produk
+        // 1. Ambil data produk melalui produkManager
         List<Produk> daftarProduk = ambilDaftarProduk(idProdukList);
 
         // 2. Kumpulkan baris tabel & data performa
@@ -48,25 +37,21 @@ public class ReportController {
         List<LaporanProduksi.PerformaProduk> performaList = new ArrayList<>();
 
         for (Produk produk : daftarProduk) {
-            // Ambil semua data produksi harian produk ini di rentang waktu
-            List<ProduksiHarian> listProduksi = produkRepository
+            // Memanggil method query yang sekarang ada di kelas Produk
+            List<ProduksiHarian> listProduksi = produkManager
                     .getProduksiByFilter(produk.getIdProduk(), tglMulai, tglSelesai);
 
-            // Ambil target produksi (untuk hitung rasio vs target)
-            List<TargetProduksi> listTarget = produkRepository
+            List<TargetProduksi> listTarget = produkManager
                     .getTargetByFilter(produk.getIdProduk(), tglMulai, tglSelesai);
 
-            // Susun baris tabel — satu baris per data harian
-            // Tetap masukkan produk meskipun data kosong (isi 0)
             if (listProduksi.isEmpty()) {
                 barisTabel.add(new LaporanProduksi.BarisTabel(
                         produk.getIdProduk(),
                         produk.getNama(),
-                        null,   // null = tidak ada data di rentang ini
+                        null,
                         0, 0
                 ));
             } else {
-                // Urutkan per tanggal ascending sebelum masuk tabel
                 listProduksi.sort(Comparator.comparing(ProduksiHarian::getTanggalProduksi));
                 for (ProduksiHarian ph : listProduksi) {
                     barisTabel.add(new LaporanProduksi.BarisTabel(
@@ -79,7 +64,6 @@ public class ReportController {
                 }
             }
 
-            // Hitung performa produk ini
             LaporanProduksi.PerformaProduk performa = hitungPerforma(produk, listProduksi, listTarget);
             performaList.add(performa);
         }
@@ -93,12 +77,11 @@ public class ReportController {
 
     private List<Produk> ambilDaftarProduk(List<Integer> idProdukList) {
         if (idProdukList == null || idProdukList.isEmpty()) {
-            // "Semua Produk" dipilih
-            return produkRepository.getAllProduk();
+            return produkManager.getAllProduk();
         }
         List<Produk> hasil = new ArrayList<>();
         for (int id : idProdukList) {
-            Produk p = produkRepository.getProdukById(id);
+            Produk p = produkManager.getProdukById(id);
             if (p != null) hasil.add(p);
         }
         return hasil;
@@ -113,34 +96,4 @@ public class ReportController {
                                                           List<TargetProduksi> listTarget) {
         int totalProduksi = listProduksi.stream()
                 .mapToInt(ProduksiHarian::getJumlahAktual)
-                .sum();
-
-        int totalDefect = listProduksi.stream()
-                .mapToInt(ProduksiHarian::getJumlahDefect)
-                .sum();
-
-        // rasioDefect = (defect / produksi) * 100, hindari division by zero
-        double rasioDefect = totalProduksi > 0
-                ? (double) totalDefect / totalProduksi * 100
-                : 0.0;
-
-        // rasioVsTarget = (totalProduksi / totalTarget) * 100
-        // null jika tidak ada target sama sekali
-        Double rasioVsTarget = null;
-        int totalTarget = listTarget.stream()
-                .mapToInt(TargetProduksi::getJumlahTarget)
-                .sum();
-        if (totalTarget > 0) {
-            rasioVsTarget = (double) totalProduksi / totalTarget * 100;
-        }
-
-        return new LaporanProduksi.PerformaProduk(
-                produk.getIdProduk(),
-                produk.getNama(),
-                totalProduksi,
-                totalDefect,
-                rasioDefect,
-                rasioVsTarget
-        );
-    }
-}
+                .
