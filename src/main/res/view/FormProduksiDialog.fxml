@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
+
+<VBox xmlns:fx="http://javafx.com/fxml"
+      spacing="16"
+      style="-fx-background-color: #0d2626; -fx-padding: 24; -fx-background-radius: 12; -fx-font-family: 'Plus Jakarta Sans';"
+      prefWidth="560">
+
+    <!-- HEADER -->
+    <Label text="Tambah Data Produksi Baru"
+           style="-fx-text-fill: white; -fx-font-size: 20; -fx-font-weight: bold;"/>
+
+    <Separator style="-fx-background-color: #1e3a3a;"/>
+
+    <!-- LABEL PRODUK -->
+    <Label text="Produk"
+           style="-fx-text-fill: white; -fx-font-size: 13;"/>
+
+    <!-- STATE 1: SEARCH PRODUK (muncul kalau belum pilih produk) -->
+    <VBox fx:id="panelCariProduk" spacing="8">
+        <TextField fx:id="fieldCariProduk"
+                   promptText="Nama atau ID produk..."
+                   onKeyReleased="#filterProduk"
+                   style="-fx-background-color: #132929; -fx-text-fill: white; -fx-prompt-text-fill: #5a8a8a; -fx-background-radius: 8; -fx-padding: 10 14;"/>
+        <ScrollPane fx:id="scrollListProduk"
+                    fitToWidth="true" prefHeight="200"
+                    style="-fx-background: transparent; -fx-background-color: #132929; -fx-background-radius: 8;">
+            <content>
+                <VBox fx:id="listProdukContainer" spacing="0"/>
+            </content>
+        </ScrollPane>
+    </VBox>
+
+    <!-- STATE 2: PRODUK TERPILIH (muncul setelah pilih produk) -->
+    <HBox fx:id="panelProdukTerpilih" spacing="16" alignment="TOP_LEFT"
+          visible="false" managed="false">
+        <StackPane prefWidth="160" prefHeight="160"
+                   style="-fx-background-color: #c0c0c0; -fx-background-radius: 8;">
+            <Label fx:id="placeholderFotoDetail"
+                   text="🖼" style="-fx-font-size: 40; -fx-text-fill: #888;"/>
+            <ImageView fx:id="fotoDetailProduk"
+                       fitWidth="160" fitHeight="160"
+                       preserveRatio="true" visible="false"/>
+        </StackPane>
+        <VBox spacing="6" HBox.hgrow="ALWAYS">
+            <Label fx:id="detailNamaProduk"
+                   style="-fx-text-fill: white; -fx-font-size: 18; -fx-font-weight: bold;"/>
+            <Label fx:id="detailKodeProduk"
+                   style="-fx-text-fill: #5a8a8a; -fx-font-size: 12;"/>
+            <Label text="Deskripsi"
+                   style="-fx-text-fill: #5a8a8a; -fx-font-size: 11; -fx-padding: 6 0 0 0;"/>
+            <Label fx:id="detailDeskripsiProduk"
+                   wrapText="true"
+                   style="-fx-text-fill: white; -fx-font-size: 12;"/>
+            <Label text="Target Produksi"
+                   style="-fx-text-fill: #5a8a8a; -fx-font-size: 11; -fx-padding: 6 0 0 0;"/>
+            <Label fx:id="detailTargetProduk"
+                   style="-fx-text-fill: white; -fx-font-size: 12;"/>
+            <Label text="Performa Bulan Ini"
+                   style="-fx-text-fill: #5a8a8a; -fx-font-size: 11; -fx-padding: 6 0 0 0;"/>
+            <Label fx:id="detailPerformaProduk"
+                   style="-fx-text-fill: white; -fx-font-size: 12;"/>
+        </VBox>
+    </HBox>
+
+    <!-- WAKTU PRODUKSI -->
+    <Label text="Waktu Produksi"
+           style="-fx-text-fill: white; -fx-font-size: 13;"/>
+    <DatePicker fx:id="fieldTanggalProduksi"
+                promptText="Start Date"
+                maxWidth="Infinity"
+                style="-fx-background-color: #132929; -fx-background-radius: 8;"/>
+
+    <!-- JUMLAH PRODUKSI + DEFECT -->
+    <HBox spacing="12">
+        <VBox spacing="6" HBox.hgrow="ALWAYS">
+            <Label text="Jumlah Produksi"
+                   style="-fx-text-fill: white; -fx-font-size: 13;"/>
+            <TextField fx:id="fieldJumlahProduksi"
+                       promptText="Deskripsi..."
+                       style="-fx-background-color: #132929; -fx-text-fill: white; -fx-prompt-text-fill: #5a8a8a; -fx-background-radius: 8; -fx-padding: 10 14;"/>
+        </VBox>
+        <VBox spacing="6" HBox.hgrow="ALWAYS">
+            <Label text="Jumlah Defect"
+                   style="-fx-text-fill: white; -fx-font-size: 13;"/>
+            <TextField fx:id="fieldJumlahDefect"
+                       promptText="Kategori..."
+                       style="-fx-background-color: #132929; -fx-text-fill: white; -fx-prompt-text-fill: #5a8a8a; -fx-background-radius: 8; -fx-padding: 10 14;"/>
+        </VBox>
+    </HBox>
+
+    <!-- CATATAN -->
+    <Label text="Catatan"
+           style="-fx-text-fill: white; -fx-font-size: 13;"/>
+    <TextField fx:id="fieldCatatan"
+               promptText="Kategori..."
+               style="-fx-background-color: #132929; -fx-text-fill: white; -fx-prompt-text-fill: #5a8a8a; -fx-background-radius: 8; -fx-padding: 10 14;"/>
+
+    <!-- TOMBOL -->
+    <Button text="Lanjut"
+            maxWidth="Infinity"
+            onAction="#simpanProduksi"
+            style="-fx-background-color: #00e5a0; -fx-text-fill: #0a1f1f; -fx-font-weight: bold; -fx-background-radius: 8; -fx-padding: 12; -fx-font-size: 14;"/>
+
+</VBox>

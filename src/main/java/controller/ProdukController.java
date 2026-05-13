@@ -12,7 +12,10 @@ import java.util.List;
 
 public class ProdukController {
 
-    // Produk
+    // =========================================================
+    // PRODUK — CORE OPERATIONS
+    // =========================================================
+
     public List<Produk> getAllProduk() {
         return Produk.getAll();
     }
@@ -22,41 +25,84 @@ public class ProdukController {
     }
 
     public Produk tambahProduk(ProdukData data, String namaKategori) {
+        // 1. Buat instance produk dari data input
         Produk produk = Produk.create(data);
 
-        // Gunakan logic dinamis: ambil objek Kategori berdasarkan String
+        // 2. Set Kategori (Dinamis: cari yang ada atau buat baru)
         Kategori kat = Kategori.getOrCreate(namaKategori);
         produk.setKategori(kat);
 
-        produk.save();
-        return produk;
+        // 3. Simpan ke database
+        boolean berhasil = produk.save();
+
+        if (berhasil) {
+            // 4. Catat ke History Log hanya jika simpan berhasil
+            // Pastikan produk.save() sudah mengisi idProduk ke objek produk
+            HistoryLog.catatAksi("CREATE", produk);
+            return produk;
+        }
+
+        return null;
     }
 
     public boolean editProduk(int idProduk, ProdukData data, String namaKategori) {
         Produk produk = Produk.getById(idProduk);
         if (produk == null) return false;
 
-        // Update kategori jika ada input
+        // 1. Update kategori jika ada perubahan input
         if (namaKategori != null && !namaKategori.isEmpty()) {
             Kategori kat = Kategori.getOrCreate(namaKategori);
             produk.setKategori(kat);
         }
 
-        produk.update(data);
-        return true;
+        // 2. Jalankan update data ke database
+        boolean berhasil = produk.update(data);
+
+        if (berhasil) {
+            // 3. Catat ke History Log
+            HistoryLog.catatAksi("UPDATE", produk);
+            return true;
+        }
+
+        return false;
     }
 
     public boolean hapusProduk(int idProduk) {
         Produk produk = Produk.getById(idProduk);
-        if (produk == null) {
+        if (produk == null) return false;
+
+        try {
+            // 1. Hapus data relasi yang bergantung secara manual (jika tidak ada ON DELETE CASCADE)
+
+            // Hapus target produksi terkait
+            List<TargetProduksi> listTarget = TargetProduksi.getByIdProduk(idProduk);
+            for (TargetProduksi target : listTarget) {
+                TargetProduksi.deleteById(target.getIdTarget());
+            }
+
+            // Hapus produksi harian terkait
+            List<ProduksiHarian> listProduksi = ProduksiHarian.getByIdProduk(idProduk);
+            for (ProduksiHarian produksi : listProduksi) {
+                ProduksiHarian.deleteById(produksi.getIdProduksi());
+            }
+
+            // 2. Catat Log SEBELUM produk benar-benar hilang dari tabel
+            // Ini penting agar informasi produk masih lengkap saat dicatat
+            HistoryLog.catatAksi("DELETE", produk);
+
+            // 3. Hapus produk secara permanen
+            return produk.delete();
+
+        } catch (Exception e) {
+            System.err.println("Gagal menghapus produk: " + e.getMessage());
             return false;
         }
-        produk.delete();
-        HistoryLog.catatAksi("DELETE", produk);
-        return true;
     }
 
-    // Produksi Harian
+    // =========================================================
+    // PRODUKSI HARIAN
+    // =========================================================
+
     public List<ProduksiHarian> getAllProduksiHarian() {
         return ProduksiHarian.getAll();
     }
@@ -69,11 +115,8 @@ public class ProdukController {
         return ProduksiHarian.getByIdProduk(idProduk);
     }
 
-    public List<ProduksiHarian> getProduksiHarianByDateRange(LocalDate dari, LocalDate sampai) {
-        return ProduksiHarian.getByDateRange(dari, sampai);
-    }
-
     public boolean tambahProduksiHarian(ProduksiHarian produksi) {
+        // Validasi: pastikan produknya ada
         if (Produk.getById(produksi.getIdProduk()) == null) {
             return false;
         }
@@ -88,17 +131,12 @@ public class ProdukController {
         return ProduksiHarian.deleteById(idProduksi);
     }
 
-    // Target Produksi
+    // =========================================================
+    // TARGET PRODUKSI
+    // =========================================================
+
     public List<TargetProduksi> getAllTarget() {
         return TargetProduksi.getAll();
-    }
-
-    public TargetProduksi getTargetById(int idTarget) {
-        return TargetProduksi.getById(idTarget);
-    }
-
-    public List<TargetProduksi> getTargetByProduk(int idProduk) {
-        return TargetProduksi.getByIdProduk(idProduk);
     }
 
     public TargetProduksi getTargetAktif(int idProduk, LocalDate tanggal) {
@@ -106,6 +144,10 @@ public class ProdukController {
     }
 
     public boolean tambahTarget(TargetProduksi target) {
+        // Validasi: pastikan produknya ada
+        if (Produk.getById(target.getIdProduk()) == null) {
+            return false;
+        }
         return target.save();
     }
 

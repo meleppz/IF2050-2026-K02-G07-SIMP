@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="view.DataProduksiViewController"
+            style="-fx-background-color: #0a1f1f; -fx-font-family: 'Plus Jakarta Sans';">
+
+    <!-- HEADER -->
+    <top>
+        <HBox alignment="CENTER_LEFT" spacing="16"
+              style="-fx-padding: 24 32 16 32;">
+            <Label text="Data Produksi"
+                   style="-fx-text-fill: #00e5a0; -fx-font-size: 28; -fx-font-weight: bold;"/>
+            <Button text="Tambah Data Produksi Baru"
+                    fx:id="btnTambahProduksi"
+                    onAction="#klikTambahProduksi"
+                    style="-fx-background-color: #00e5a0; -fx-text-fill: #0a1f1f; -fx-font-weight: bold; -fx-background-radius: 8; -fx-padding: 8 20;"/>
+        </HBox>
+    </top>
+
+    <!-- CONTENT -->
+    <center>
+        <VBox spacing="16" style="-fx-padding: 0 32 32 32;">
+
+            <!-- SEARCH BAR -->
+            <TextField fx:id="fieldCariProduksi"
+                       promptText="Cari Log Data Produksi"
+                       onKeyReleased="#cariProduksi"
+                       style="-fx-background-color: #132929; -fx-text-fill: white; -fx-prompt-text-fill: #5a8a8a; -fx-background-radius: 8; -fx-padding: 12 16; -fx-font-size: 14;"/>
+
+            <!-- EMPTY STATE -->
+            <VBox fx:id="emptyState" alignment="CENTER" spacing="16"
+                  style="-fx-padding: 80 0;">
+                <Label text="Uh Oh"
+                       style="-fx-text-fill: white; -fx-font-size: 22; -fx-font-weight: bold;"/>
+                <Label text="Data produksi masih kosong, ayo tambahkan terlebih dahulu"
+                       style="-fx-text-fill: #5a8a8a; -fx-font-size: 14;"/>
+                <Button text="Tambah Data Produksi"
+                        onAction="#klikTambahProduksi"
+                        style="-fx-background-color: #00e5a0; -fx-text-fill: #0a1f1f; -fx-font-weight: bold; -fx-background-radius: 8; -fx-padding: 12 40; -fx-font-size: 14;"/>
+            </VBox>
+
+            <!-- TABEL -->
+            <VBox fx:id="containerTabel" spacing="0">
+                <!-- HEADER TABEL -->
+                <HBox style="-fx-background-color: #132929; -fx-padding: 12 16; -fx-background-radius: 8 8 0 0;">
+                    <Label text="ID" prefWidth="80"
+                           style="-fx-text-fill: white; -fx-font-weight: bold;"/>
+                    <Label text="Nama Produk" prefWidth="200"
+                           style="-fx-text-fill: white; -fx-font-weight: bold;"/>
+                    <Label text="Total Produksi" prefWidth="150"
+                           style="-fx-text-fill: white; -fx-font-weight: bold;"/>
+                    <Label text="Defect" prefWidth="100"
+                           style="-fx-text-fill: white; -fx-font-weight: bold;"/>
+                    <Label text="Kategori" prefWidth="150"
+                           style="-fx-text-fill: white; -fx-font-weight: bold;"/>
+                    <Label text="Perubahan Terakhir" prefWidth="200"
+                           style="-fx-text-fill: white; -fx-font-weight: bold;"/>
+                    <Label text="Aksi" prefWidth="100"
+                           style="-fx-text-fill: white; -fx-font-weight: bold;"/>
+                </HBox>
+
+                <!-- ISI TABEL -->
+                <ScrollPane fx:id="scrollTabel" fitToWidth="true"
+                            style="-fx-background: transparent; -fx-background-color: transparent;">
+                    <content>
+                        <VBox fx:id="isiTabel"/>
+                    </content>
+                </ScrollPane>
+            </VBox>
+
+        </VBox>
+    </center>
+
+</BorderPane>
