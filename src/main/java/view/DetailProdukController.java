@@ -2,14 +2,17 @@ package view;
 
 import controller.ProdukController;
 import javafx.fxml.FXML;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.control.Button;
 import model.Produk;
 import model.TargetProduksi;
+import service.StatistikService;
+import util.Session;
 
 import java.time.LocalDate;
+import java.util.Map;
 
 public class DetailProdukController {
 
@@ -27,6 +30,9 @@ public class DetailProdukController {
     private int idProduk;
     private Runnable onEdit;
     private Runnable onHapus;
+    
+    // ✅ Instance StatistikService untuk menghitung performa
+    private StatistikService statistikService = new StatistikService();
 
     public void init(ProdukController produkController, int idProduk,
                      Runnable onEdit, Runnable onHapus) {
@@ -47,7 +53,11 @@ public class DetailProdukController {
         TargetProduksi target = produkController.getTargetAktif(idProduk, LocalDate.now());
         if (target != null) {
             detailTarget.setText(target.getJumlahTarget() + " " + produk.getSatuan() + " per Bulan");
-            detailPerforma.setText(String.format("%.0f%%", target.getPersentasePencapaian()));
+            
+            // ✅ Hitung performa menggunakan StatistikService (30 hari terakhir)
+            Map<String, Object> performaData = statistikService.getPerforma30Hari(idProduk, LocalDate.now());
+            double rataRataPerforma = (Double) performaData.get("rataRataPerforma");
+            detailPerforma.setText(String.format("%.0f%%", rataRataPerforma));
         } else {
             detailTarget.setText("Belum ada target");
             detailPerforma.setText("-");
