@@ -12,6 +12,7 @@ import javafx.scene.layout.*;
 import javafx.util.Duration;
 import model.Produk;
 import model.TargetProduksi;
+import util.Session;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -35,6 +36,9 @@ public class ProdukViewController {
     private List<Produk> daftarProduk;
     private Integer idProdukSedangDiedit = null;
     private Dialog<ButtonType> dialogDetail = null;
+    
+    // ✅ Session untuk permission check
+    private Session session = Session.getInstance();
 
     @FXML
     public void initialize() {
@@ -71,10 +75,11 @@ public class ProdukViewController {
     private VBox buatCardProduk(Produk produk) {
         VBox card = new VBox(8);
         card.setStyle("-fx-background-color: #132929; -fx-background-radius: 12; -fx-padding: 12; -fx-cursor: hand;");
-        card.setPrefWidth(380);
+        card.setPrefWidth(493);
 
         HBox baris = new HBox(12);
         baris.setStyle("-fx-alignment: CENTER_LEFT;");
+        baris.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
 
         StackPane fotoContainer = new StackPane();
         fotoContainer.setPrefSize(80, 80);
@@ -174,6 +179,12 @@ public class ProdukViewController {
 
     @FXML
     public void klikTambahProduk() {
+        // ✅ Permission check: Hanya OPERATOR yang bisa menambah produk
+        if (!session.isOperator()) {
+            tampilkanPesan("Hanya Operator yang bisa menambah produk. Anda adalah: " + session.getPenggunaAktif().getPeran());
+            return;
+        }
+        
         idProdukSedangDiedit = null;
         tampilkanFormProduk();
     }
