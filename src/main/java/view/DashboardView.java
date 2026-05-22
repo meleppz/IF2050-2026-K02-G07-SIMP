@@ -365,7 +365,7 @@ public class DashboardView extends BorderPane {
         lblTitle.setFont(fBold20);
         lblTitle.setStyle("-fx-text-fill: " + TEXT_WHITE + ";");
 
-        Label lblSub = new Label("Produk dan data produksi masih kosong, ayo tambahkan terlebih dahulu");
+        Label lblSub = new Label("Produk dan data produksi untuk periode ini masih kosong, ayo tambahkan terlebih dahulu");
         lblSub.setFont(fReg13);
         lblSub.setStyle("-fx-text-fill: " + TEXT_MUTED + ";");
         lblSub.setWrapText(true);
