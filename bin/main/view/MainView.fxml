@@ -64,7 +64,7 @@
                 <Button maxWidth="Infinity" onAction="#klikKeluar"
                         style="-fx-background-color: #00e5a0; -fx-background-radius: 8; -fx-padding: 12 16; -fx-cursor: hand;">
                     <graphic>
-                        <HBox spacing="12" alignment="CENTER_LEFT">
+                        <HBox spacing="12" alignment="CENTER" maxWidth="-Infinity" StackPane.alignment="CENTER">
                             <ImageView fx:id="iconKeluar" fitWidth="18" fitHeight="18" preserveRatio="true"/>
                             <Label text="Keluar" style="-fx-text-fill: #0a1f1f; -fx-font-size: 13; -fx-font-weight: bold;"/>
                         </HBox>

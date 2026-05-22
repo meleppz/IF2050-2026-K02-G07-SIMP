@@ -94,20 +94,20 @@
             <!-- TABEL -->
             <VBox fx:id="containerTabel" spacing="0" VBox.vgrow="ALWAYS">
                 <!-- HEADER TABEL (menggunakan responsive layout) -->
-                <HBox style="-fx-background-color: #132929; -fx-padding: 12 16; -fx-background-radius: 8 8 0 0;" alignment="CENTER_LEFT" spacing="8">
-                    <Label text="ID" minWidth="60"
+                <HBox style="-fx-background-color: #132929; -fx-padding: 12 16; -fx-background-radius: 8 8 0 0;" alignment="CENTER_LEFT">
+                    <Label text="ID" prefWidth="80" alignment="CENTER"
                            style="-fx-text-fill: white; -fx-font-weight: bold;"/>
-                    <Label text="Nama Produk" HBox.hgrow="ALWAYS"
+                    <Label text="Nama Produk" prefWidth="200" alignment="CENTER"
                            style="-fx-text-fill: white; -fx-font-weight: bold;"/>
-                    <Label text="Total Produksi" minWidth="120"
+                    <Label text="Total Produksi" prefWidth="150" alignment="CENTER"
                            style="-fx-text-fill: white; -fx-font-weight: bold;"/>
-                    <Label text="Defect" minWidth="80"
+                    <Label text="Defect" prefWidth="100" alignment="CENTER"
                            style="-fx-text-fill: white; -fx-font-weight: bold;"/>
-                    <Label text="Kategori" minWidth="100"
+                    <Label text="Kategori" prefWidth="150" alignment="CENTER"
                            style="-fx-text-fill: white; -fx-font-weight: bold;"/>
-                    <Label text="Perubahan Terakhir" minWidth="140"
+                    <Label text="Perubahan Terakhir" prefWidth="200" alignment="CENTER"
                            style="-fx-text-fill: white; -fx-font-weight: bold;"/>
-                    <Label text="Aksi" minWidth="80"
+                    <Label text="Aksi" prefWidth="100" alignment="CENTER"
                            style="-fx-text-fill: white; -fx-font-weight: bold;"/>
                 </HBox>
 
