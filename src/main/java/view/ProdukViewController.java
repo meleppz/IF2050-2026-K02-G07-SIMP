@@ -19,6 +19,7 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import model.Produk;
+import model.TargetProduksi;
 import service.StatistikService;
 import util.Session;
 
@@ -375,24 +376,74 @@ public class ProdukViewController {
         // ✅ Eksekusi Simpan ke Database
         try {
             if (idProdukSedangDiedit == null) {
+                // ——— TAMBAH PRODUK BARU ———
                 Produk hasil = produkController.tambahProduk(data, kategoriInput);
                 if (hasil != null && hasil.getIdProduk() != 0) {
+                    // ✅ FIX: Ambil NIK dari Session user yang login
+                    String nikUser = Session.getInstance().getNikAktif();
                     produkController.tambahTarget(new model.TargetProduksi(
-                            hasil.getIdProduk(), "000000", jumlahTarget, 1
+                            hasil.getIdProduk(), nikUser, jumlahTarget, 1
                     ));
                 } else {
                     tampilkanPesan("Gagal menyimpan produk!");
                     return;
                 }
             } else {
+                // ——— EDIT PRODUK YANG ADA ———
                 boolean berhasil = produkController.editProduk(idProdukSedangDiedit, data, kategoriInput);
                 if (!berhasil) {
                     tampilkanPesan("Gagal memperbarui produk!");
                     return;
                 }
+
+                // ✅ FIX: Update target produksi jika ada perubahan
+                String targetTrimmer = targetStr.trim();
+                if (!targetTrimmer.isEmpty()) {
+                    try {
+                        int jumlahTargetBaru = Integer.parseInt(targetTrimmer);
+                        if (jumlahTargetBaru > 0) {
+                            // Ambil target yang aktif untuk produk ini
+                            TargetProduksi targetAktif = produkController.getTargetAktif(
+                                    idProdukSedangDiedit, java.time.LocalDate.now()
+                            );
+
+                            if (targetAktif != null) {
+                                // ✅ Update target yang sudah ada
+                                targetAktif.setJumlahTarget(jumlahTargetBaru);
+                                boolean targetBerhasil = produkController.editTarget(targetAktif);
+                                if (targetBerhasil) {
+                                    System.out.println("✓ Target berhasil diperbarui: " + jumlahTargetBaru);
+                                } else {
+                                    tampilkanPesan("Produk diupdate, tapi target gagal diupdate!");
+                                    return;
+                                }
+                            } else {
+                                // ✅ Jika target tidak ada, buat baru (gunakan NIK current user)
+                                String nikUser = Session.getInstance().getNikAktif();
+                                boolean targetBaru = produkController.tambahTarget(new model.TargetProduksi(
+                                        idProdukSedangDiedit, nikUser, jumlahTargetBaru, 1
+                                ));
+                                if (targetBaru) {
+                                    System.out.println("✓ Target baru dibuat: " + jumlahTargetBaru);
+                                } else {
+                                    tampilkanPesan("Produk diupdate, tapi gagal membuat target baru!");
+                                    return;
+                                }
+                            }
+                        } else {
+                            // ✅ FIX: Validasi target harus > 0
+                            tampilkanPesan("Target produksi harus lebih dari 0!");
+                            return;
+                        }
+                    } catch (NumberFormatException e) {
+                        tampilkanPesan("Target produksi harus berupa angka!");
+                        return;
+                    }
+                }
             }
         } catch (Exception e) {
             tampilkanPesan("Terjadi error: " + e.getMessage());
+            e.printStackTrace();
             return;
         }
 
