@@ -215,10 +215,38 @@ public class ProdukViewController {
         Label kategori = new Label(produk.getKategori() != null ? produk.getKategori().getNamaKategori() : "-");
         kategori.setStyle("-fx-background-color: #1e3a3a; -fx-text-fill: #00e5a0; -fx-font-size: 11; -fx-background-radius: 20; -fx-padding: 2 10;");
 
-        // ✅ Hitung performa produk (30 hari terakhir)
+        double rataRataPerforma = 0.0;
+        String performaText = "Performa: 0%";
+
         Map<String, Object> performaData = statistikService.getPerforma30Hari(produk.getIdProduk(), LocalDate.now());
-        double rataRataPerforma = (Double) performaData.get("rataRataPerforma");
-        String performaText = "Performa: " + String.format("%.0f%%", rataRataPerforma);
+        if (performaData != null && performaData.get("rataRataPerforma") != null) {
+            Object performaObj = performaData.get("rataRataPerforma");
+            if (performaObj instanceof Number) {
+                rataRataPerforma = ((Number) performaObj).doubleValue();
+                performaText = "Performa: " + String.format("%.0f%%", rataRataPerforma);
+            }
+        }
+
+        if (rataRataPerforma == 0.0) {
+            LocalDate tanggalAwal = LocalDate.now().minusDays(29);
+            LocalDate tanggalAkhir = LocalDate.now();
+            List<model.ProduksiHarian> dataProduksi = model.ProduksiHarian.getByIdProduk(produk.getIdProduk()).stream()
+                    .filter(ph -> !ph.getTanggalProduksi().isBefore(tanggalAwal) && !ph.getTanggalProduksi().isAfter(tanggalAkhir))
+                    .toList();
+
+            if (!dataProduksi.isEmpty()) {
+                int totalAktual = dataProduksi.stream().mapToInt(model.ProduksiHarian::getJumlahAktual).sum();
+                int totalDefect = dataProduksi.stream().mapToInt(model.ProduksiHarian::getJumlahDefect).sum();
+                int totalBersih = Math.max(0, totalAktual - totalDefect);
+
+                // Hitung performa sebagai % dari total (bukan target)
+                if (totalAktual > 0) {
+                    rataRataPerforma = (totalBersih / (double) totalAktual) * 100.0;
+                    performaText = "Performa: " + String.format("%.0f%%", rataRataPerforma);
+                }
+            }
+        }
+
         Label performa = new Label(performaText);
         performa.setStyle("-fx-text-fill: #5a8a8a; -fx-font-size: 12;");
 

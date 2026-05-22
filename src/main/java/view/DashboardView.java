@@ -38,7 +38,7 @@ public class DashboardView extends BorderPane {
     private static final String COLOR_RED   = "#e05a5a";
 
     // ── State ────────────────────────────────────────────────
-    private LocalDate dari   = LocalDate.now().minusDays(6);
+    private LocalDate dari   = LocalDate.now().withDayOfMonth(1);      // Tanggal 1 bulan ini
     private LocalDate sampai = LocalDate.now();
 
     // ── Services ─────────────────────────────────────────────
@@ -586,8 +586,9 @@ public class DashboardView extends BorderPane {
         dataStateBox.setVisible(adaData);
         dataStateBox.setManaged(adaData);
 
+        updateStatCards(data);
+
         if (adaData) {
-            updateStatCards(data);
             updateGrafik(data);
             updatePerformingTables(data);
         }
