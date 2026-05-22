@@ -10,13 +10,13 @@
 
     <!-- HEADER -->
     <top>
-        <HBox alignment="CENTER_LEFT" style="-fx-padding: 24 32;" spacing="12">
+        <HBox alignment="CENTER_LEFT" style="-fx-padding: 24 32 16 32;">
 
             <!-- KIRI: judul + divider + tombol -->
             <Label text="Data Produksi"
                    style="-fx-text-fill: #00e5a0; -fx-font-size: 28; -fx-font-weight: bold;"/>
             <Label text="|"
-                   style="-fx-text-fill: #1e3a3a; -fx-font-size: 28; -fx-padding: 0 8;"/>
+                   style="-fx-text-fill: #1e3a3a; -fx-font-size: 28; -fx-padding: 0 16;"/>
             <Button text="Tambah Data Produksi Baru"
                     fx:id="btnTambahProduksi"
                     onAction="#klikTambahProduksi"
@@ -46,6 +46,7 @@
                 <VBox alignment="CENTER_LEFT" spacing="2">
                     <Label text="Selamat Datang"
                            style="-fx-text-fill: #5a8a8a; -fx-font-size: 11;"/>
+                    <!-- Tambahkan fx:id="lblNamaPengguna" di sini -->
                     <Label fx:id="lblNamaPengguna"
                            text="Lorem Ipsum"
                            style="-fx-text-fill: white; -fx-font-size: 13; -fx-font-weight: bold;"/>
@@ -73,10 +74,10 @@
                 </StackPane>
 
                 <ComboBox fx:id="comboFilterKategori" promptText="Semua Kategori" onAction="#updateFilterDanSort"
-                          minWidth="150" style="-fx-background-color: #132929; -fx-text-fill: white; -fx-text-base-color: white; -fx-background-radius: 8; -fx-padding: 8;"/>
+                          prefWidth="180" style="-fx-background-color: #132929; -fx-text-fill: white; -fx-text-base-color: white; -fx-background-radius: 8; -fx-padding: 8;"/>
 
                 <ComboBox fx:id="comboSort" promptText="Urutkan" onAction="#updateFilterDanSort"
-                          minWidth="150" style="-fx-background-color: #132929; -fx-text-fill: white; -fx-text-base-color: white; -fx-background-radius: 8; -fx-padding: 8;"/>
+                          prefWidth="180" style="-fx-background-color: #132929; -fx-text-fill: white; -fx-text-base-color: white; -fx-background-radius: 8; -fx-padding: 8;"/>
             </HBox>
 
             <!-- EMPTY STATE -->
@@ -92,9 +93,9 @@
             </VBox>
 
             <!-- TABEL -->
-            <VBox fx:id="containerTabel" spacing="0" VBox.vgrow="ALWAYS">
-                <!-- HEADER TABEL (menggunakan responsive layout) -->
-                <HBox style="-fx-background-color: #132929; -fx-padding: 12 16; -fx-background-radius: 8 8 0 0;" alignment="CENTER_LEFT">
+            <VBox fx:id="containerTabel" spacing="0">
+                <!-- HEADER TABEL -->
+                <HBox style="-fx-background-color: #132929; -fx-padding: 12 16; -fx-background-radius: 8 8 0 0;" alignment="CENTER">
                     <Label text="ID" prefWidth="80" alignment="CENTER"
                            style="-fx-text-fill: white; -fx-font-weight: bold;"/>
                     <Label text="Nama Produk" prefWidth="200" alignment="CENTER"
@@ -115,7 +116,7 @@
                 <ScrollPane fx:id="scrollTabel" fitToWidth="true"
                             style="-fx-background: transparent; -fx-background-color: transparent;">
                     <content>
-                        <VBox fx:id="isiTabel" style="-fx-spacing: 1;"/>
+                        <VBox fx:id="isiTabel"/>
                     </content>
                 </ScrollPane>
             </VBox>

@@ -9,7 +9,7 @@ CREATE TABLE pengguna (
                           nik VARCHAR(16) PRIMARY KEY,
                           nama VARCHAR(30) NOT NULL,
                           username VARCHAR(30) UNIQUE NOT NULL,
-                          password VARCHAR(64) NOT NULL,
+                          password VARCHAR(30) NOT NULL,
                           nomor_telepon VARCHAR(20),
                           email VARCHAR(30),
                           peran VARCHAR(20),
@@ -22,11 +22,11 @@ CREATE TABLE pengguna (
 CREATE TABLE produk (
                         id_produk SERIAL PRIMARY KEY,
                         nama VARCHAR(30) NOT NULL,
-                        kode VARCHAR(255) UNIQUE NOT NULL,
+                        kode VARCHAR(50) UNIQUE NOT NULL,
                         id_kategori INT REFERENCES kategori(id_kategori),
                         satuan VARCHAR(20),
                         deskripsi TEXT,
-                        foto VARCHAR(255),
+                        foto VARCHAR(50),
                         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -54,7 +54,7 @@ CREATE TABLE produksi_harian (
 
 CREATE TABLE history_log (
                              id_histori SERIAL PRIMARY KEY,
-                             id_produk INT REFERENCES produk(id_produk) ON DELETE SET NULL,
+                             id_produk INT REFERENCES produk(id_produk),
                              nik_pengguna VARCHAR(16) REFERENCES pengguna(nik),
                              aksi VARCHAR(30),
                              timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

@@ -9,13 +9,13 @@
 
     <!-- HEADER -->
     <top>
-        <HBox alignment="CENTER_LEFT" style="-fx-padding: 24 32;" spacing="12">
+        <HBox alignment="CENTER_LEFT" style="-fx-padding: 24 32 16 32;">
 
             <!-- KIRI: judul + divider + tombol -->
             <Label text="Produk"
                    style="-fx-text-fill: #00e5a0; -fx-font-size: 28; -fx-font-weight: bold;"/>
             <Label text="|"
-                   style="-fx-text-fill: #1e3a3a; -fx-font-size: 28; -fx-padding: 0 8;"/>
+                   style="-fx-text-fill: #1e3a3a; -fx-font-size: 28; -fx-padding: 0 16;"/>
             <Button text="Tambah Produk Baru"
                     fx:id="btnTambahProduk"
                     onAction="#klikTambahProduk"
@@ -45,6 +45,7 @@
                 <VBox alignment="CENTER_LEFT" spacing="2">
                     <Label text="Selamat Datang"
                            style="-fx-text-fill: #5a8a8a; -fx-font-size: 11;"/>
+                    <!-- Tambahkan fx:id="lblNamaPengguna" di sini -->
                     <Label fx:id="lblNamaPengguna"
                            text="Lorem Ipsum"
                            style="-fx-text-fill: white; -fx-font-size: 13; -fx-font-weight: bold;"/>
@@ -59,9 +60,9 @@
         <VBox spacing="16" style="-fx-padding: 0 32 32 32;">
 
             <!-- SEARCH BAR + FILTER -->
-            <HBox spacing="12" alignment="CENTER_LEFT" style="-fx-wrap-text: true;">
+            <HBox spacing="12" alignment="CENTER_LEFT">
 
-                <StackPane HBox.hgrow="ALWAYS" minWidth="200">
+                <StackPane HBox.hgrow="ALWAYS">
                     <TextField fx:id="fieldCariProduk"
                                promptText="Cari nama atau kode produk..."
                                style="-fx-background-color: #132929; -fx-text-fill: white; -fx-prompt-text-fill: #5a8a8a; -fx-background-radius: 8; -fx-padding: 12 48 12 16; -fx-font-size: 14;"/>
@@ -77,12 +78,10 @@
 
                 <ComboBox fx:id="comboFilterKategori"
                           promptText="Semua Kategori"
-                          minWidth="150"
                           style="-fx-background-color: #132929; -fx-text-fill: white; -fx-text-base-color: white; -fx-background-radius: 8; -fx-padding: 8;"/>
 
                 <ComboBox fx:id="comboSortProduk"
                           promptText="Urutkan"
-                          minWidth="150"
                           style="-fx-background-color: #132929; -fx-text-fill: white; -fx-text-base-color: white; -fx-background-radius: 8; -fx-padding: 8;"/>
 
             </HBox>
@@ -100,10 +99,10 @@
             </VBox>
 
             <!-- GRID PRODUK -->
-            <ScrollPane fx:id="scrollProduk" fitToWidth="true" VBox.vgrow="ALWAYS"
+            <ScrollPane fx:id="scrollProduk" fitToWidth="true"
                         style="-fx-background: transparent; -fx-background-color: transparent;">
                 <content>
-                    <FlowPane fx:id="gridProduk" hgap="16" vgap="16" prefWrapLength="0"/>
+                    <FlowPane fx:id="gridProduk" hgap="16" vgap="16"/>
                 </content>
             </ScrollPane>
 

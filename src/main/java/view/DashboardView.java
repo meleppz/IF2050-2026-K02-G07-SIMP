@@ -38,7 +38,7 @@ public class DashboardView extends BorderPane {
     private static final String COLOR_RED   = "#e05a5a";
 
     // ── State ────────────────────────────────────────────────
-    private LocalDate dari   = LocalDate.now().minusDays(6);
+    private LocalDate dari   = LocalDate.now().withDayOfMonth(1);      // Tanggal 1 bulan ini
     private LocalDate sampai = LocalDate.now();
 
     // ── Services ─────────────────────────────────────────────
@@ -96,19 +96,40 @@ public class DashboardView extends BorderPane {
     // BUILD UI
     // =========================================================
     private void buildUI() {
+        // 1. Bersihkan style dasar
         setStyle("-fx-background-color: " + BG_MAIN + ";");
-        setPrefWidth(1280);
-        setTop(buildHeader());
+
+        ScrollPane scrollPane = new ScrollPane();
+        scrollPane.setFitToWidth(true);
+        scrollPane.setFitToHeight(false);
+        scrollPane.setStyle(
+                "-fx-background: " + BG_MAIN + ";" +
+                        "-fx-background-color: " + BG_MAIN + ";" +
+                        "-fx-border-color: transparent;"
+        );
+
+        VBox containerUtama = new VBox();
+        containerUtama.setStyle("-fx-background-color: " + BG_MAIN + ";");
+        containerUtama.setSpacing(0);
+
+        containerUtama.getChildren().add(buildHeader());
 
         HBox body = new HBox(16);
         body.setPadding(new Insets(0, 24, 24, 24));
+        body.setAlignment(Pos.TOP_LEFT);
 
         VBox mainContent = buildMainContent();
         VBox rightPanel  = buildRightPanel();
 
         HBox.setHgrow(mainContent, Priority.ALWAYS);
+
         body.getChildren().addAll(mainContent, rightPanel);
-        setCenter(body);
+
+        containerUtama.getChildren().add(body);
+
+        // 7. Pasang semuanya ke BorderPane
+        scrollPane.setContent(containerUtama);
+        setCenter(scrollPane);
     }
 
     // ─── HEADER ───────────────────────────────────────────────
@@ -344,7 +365,7 @@ public class DashboardView extends BorderPane {
         lblTitle.setFont(fBold20);
         lblTitle.setStyle("-fx-text-fill: " + TEXT_WHITE + ";");
 
-        Label lblSub = new Label("Produk dan data produksi masih kosong, ayo tambahkan terlebih dahulu");
+        Label lblSub = new Label("Produk dan data produksi untuk periode ini masih kosong, ayo tambahkan terlebih dahulu");
         lblSub.setFont(fReg13);
         lblSub.setStyle("-fx-text-fill: " + TEXT_MUTED + ";");
         lblSub.setWrapText(true);
@@ -386,8 +407,18 @@ public class DashboardView extends BorderPane {
         lblGrafik.setStyle("-fx-text-fill: " + TEXT_WHITE + ";");
         grafikHeader.getChildren().addAll(lblGrafikIcon, lblGrafik);
 
-        grafikCanvas = new Canvas(650, 220);
-        grafikCard.getChildren().addAll(grafikHeader, grafikCanvas);
+        // Ganti Canvas dengan StackPane yang lebih responsive
+        StackPane canvasContainer = new StackPane();
+        canvasContainer.setStyle("-fx-background-color: " + BG_CARD + ";");
+        canvasContainer.setMinHeight(250);
+        canvasContainer.setPrefHeight(250);
+
+        grafikCanvas = new Canvas();
+        grafikCanvas.setWidth(650);
+        grafikCanvas.setHeight(220);
+
+        canvasContainer.getChildren().add(grafikCanvas);
+        grafikCard.getChildren().addAll(grafikHeader, canvasContainer);
 
         // Top & Worst Performing
         topPerformingBox  = new VBox(0);
@@ -511,7 +542,8 @@ public class DashboardView extends BorderPane {
         VBox card = new VBox(12);
         card.setPadding(new Insets(16));
         card.setStyle("-fx-background-color: " + BG_CARD + "; -fx-background-radius: 12;");
-        VBox.setVgrow(card, Priority.ALWAYS);
+        card.setMaxHeight(Region.USE_COMPUTED_SIZE);
+        VBox.setVgrow(card, Priority.NEVER);
 
         HBox header = new HBox(8);
         header.setAlignment(Pos.CENTER_LEFT);
@@ -554,8 +586,9 @@ public class DashboardView extends BorderPane {
         dataStateBox.setVisible(adaData);
         dataStateBox.setManaged(adaData);
 
+        updateStatCards(data);
+
         if (adaData) {
-            updateStatCards(data);
             updateGrafik(data);
             updatePerformingTables(data);
         }

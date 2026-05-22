@@ -5,10 +5,11 @@
 
 <BorderPane xmlns:fx="http://javafx.com/fxml"
             fx:controller="view.LoginViewController"
-            style="-fx-background-color: #0a1f1f; -fx-font-family: 'Plus Jakarta Sans';">
+            style="-fx-background-color: #0a1f1f; -fx-font-family: 'Plus Jakarta Sans';"
+            prefWidth="1280" prefHeight="900">
 
     <center>
-        <VBox alignment="CENTER" spacing="24" style="-fx-padding: 32;">
+        <VBox alignment="CENTER" spacing="24" prefWidth="580">
 
             <!-- LOGO -->
             <ImageView fx:id="logoImage"
@@ -20,14 +21,13 @@
                    style="-fx-text-fill: #c8e6c9; -fx-font-size: 16;"/>
 
             <!-- FORM -->
-            <VBox spacing="12" maxWidth="580">
+            <VBox spacing="12" prefWidth="580">
 
                 <!-- NIK -->
                 <Label text="Nomor Induk Karyawan"
                        style="-fx-text-fill: white; -fx-font-size: 13;"/>
                 <TextField fx:id="fieldNik"
                            promptText="18234567890"
-                           maxWidth="580"
                            style="-fx-background-color: #132929; -fx-text-fill: white; -fx-prompt-text-fill: #5a8a8a; -fx-background-radius: 8; -fx-padding: 14 16; -fx-font-size: 14;"/>
 
                 <!-- PASSWORD -->

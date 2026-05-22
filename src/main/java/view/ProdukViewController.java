@@ -19,6 +19,7 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import model.Produk;
+import model.TargetProduksi;
 import service.StatistikService;
 import util.Session;
 
@@ -215,10 +216,38 @@ public class ProdukViewController {
         Label kategori = new Label(produk.getKategori() != null ? produk.getKategori().getNamaKategori() : "-");
         kategori.setStyle("-fx-background-color: #1e3a3a; -fx-text-fill: #00e5a0; -fx-font-size: 11; -fx-background-radius: 20; -fx-padding: 2 10;");
 
-        // ✅ Hitung performa produk (30 hari terakhir)
+        double rataRataPerforma = 0.0;
+        String performaText = "Performa: 0%";
+
         Map<String, Object> performaData = statistikService.getPerforma30Hari(produk.getIdProduk(), LocalDate.now());
-        double rataRataPerforma = (Double) performaData.get("rataRataPerforma");
-        String performaText = "Performa: " + String.format("%.0f%%", rataRataPerforma);
+        if (performaData != null && performaData.get("rataRataPerforma") != null) {
+            Object performaObj = performaData.get("rataRataPerforma");
+            if (performaObj instanceof Number) {
+                rataRataPerforma = ((Number) performaObj).doubleValue();
+                performaText = "Performa: " + String.format("%.0f%%", rataRataPerforma);
+            }
+        }
+
+        if (rataRataPerforma == 0.0) {
+            LocalDate tanggalAwal = LocalDate.now().minusDays(29);
+            LocalDate tanggalAkhir = LocalDate.now();
+            List<model.ProduksiHarian> dataProduksi = model.ProduksiHarian.getByIdProduk(produk.getIdProduk()).stream()
+                    .filter(ph -> !ph.getTanggalProduksi().isBefore(tanggalAwal) && !ph.getTanggalProduksi().isAfter(tanggalAkhir))
+                    .toList();
+
+            if (!dataProduksi.isEmpty()) {
+                int totalAktual = dataProduksi.stream().mapToInt(model.ProduksiHarian::getJumlahAktual).sum();
+                int totalDefect = dataProduksi.stream().mapToInt(model.ProduksiHarian::getJumlahDefect).sum();
+                int totalBersih = Math.max(0, totalAktual - totalDefect);
+
+                // Hitung performa sebagai % dari total (bukan target)
+                if (totalAktual > 0) {
+                    rataRataPerforma = (totalBersih / (double) totalAktual) * 100.0;
+                    performaText = "Performa: " + String.format("%.0f%%", rataRataPerforma);
+                }
+            }
+        }
+
         Label performa = new Label(performaText);
         performa.setStyle("-fx-text-fill: #5a8a8a; -fx-font-size: 12;");
 
@@ -347,24 +376,74 @@ public class ProdukViewController {
         // ✅ Eksekusi Simpan ke Database
         try {
             if (idProdukSedangDiedit == null) {
+                // ——— TAMBAH PRODUK BARU ———
                 Produk hasil = produkController.tambahProduk(data, kategoriInput);
                 if (hasil != null && hasil.getIdProduk() != 0) {
+                    // ✅ FIX: Ambil NIK dari Session user yang login
+                    String nikUser = Session.getInstance().getNikAktif();
                     produkController.tambahTarget(new model.TargetProduksi(
-                            hasil.getIdProduk(), "000000", jumlahTarget, 1
+                            hasil.getIdProduk(), nikUser, jumlahTarget, 1
                     ));
                 } else {
                     tampilkanPesan("Gagal menyimpan produk!");
                     return;
                 }
             } else {
+                // ——— EDIT PRODUK YANG ADA ———
                 boolean berhasil = produkController.editProduk(idProdukSedangDiedit, data, kategoriInput);
                 if (!berhasil) {
                     tampilkanPesan("Gagal memperbarui produk!");
                     return;
                 }
+
+                // ✅ FIX: Update target produksi jika ada perubahan
+                String targetTrimmer = targetStr.trim();
+                if (!targetTrimmer.isEmpty()) {
+                    try {
+                        int jumlahTargetBaru = Integer.parseInt(targetTrimmer);
+                        if (jumlahTargetBaru > 0) {
+                            // Ambil target yang aktif untuk produk ini
+                            TargetProduksi targetAktif = produkController.getTargetAktif(
+                                    idProdukSedangDiedit, java.time.LocalDate.now()
+                            );
+
+                            if (targetAktif != null) {
+                                // ✅ Update target yang sudah ada
+                                targetAktif.setJumlahTarget(jumlahTargetBaru);
+                                boolean targetBerhasil = produkController.editTarget(targetAktif);
+                                if (targetBerhasil) {
+                                    System.out.println("✓ Target berhasil diperbarui: " + jumlahTargetBaru);
+                                } else {
+                                    tampilkanPesan("Produk diupdate, tapi target gagal diupdate!");
+                                    return;
+                                }
+                            } else {
+                                // ✅ Jika target tidak ada, buat baru (gunakan NIK current user)
+                                String nikUser = Session.getInstance().getNikAktif();
+                                boolean targetBaru = produkController.tambahTarget(new model.TargetProduksi(
+                                        idProdukSedangDiedit, nikUser, jumlahTargetBaru, 1
+                                ));
+                                if (targetBaru) {
+                                    System.out.println("✓ Target baru dibuat: " + jumlahTargetBaru);
+                                } else {
+                                    tampilkanPesan("Produk diupdate, tapi gagal membuat target baru!");
+                                    return;
+                                }
+                            }
+                        } else {
+                            // ✅ FIX: Validasi target harus > 0
+                            tampilkanPesan("Target produksi harus lebih dari 0!");
+                            return;
+                        }
+                    } catch (NumberFormatException e) {
+                        tampilkanPesan("Target produksi harus berupa angka!");
+                        return;
+                    }
+                }
             }
         } catch (Exception e) {
             tampilkanPesan("Terjadi error: " + e.getMessage());
+            e.printStackTrace();
             return;
         }
 

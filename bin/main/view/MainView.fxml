@@ -8,17 +8,15 @@
             style="-fx-background-color: #0a1f1f; -fx-font-family: 'Plus Jakarta Sans';">
 
     <left>
-        <VBox minWidth="210" maxWidth="250" style="-fx-background-color: #061414;">
+        <VBox prefWidth="210" style="-fx-background-color: #061414;">
 
-            <!-- LOGO SECTION - equal spacing -->
-            <VBox alignment="CENTER" style="-fx-padding: 20 16; -fx-min-height: 100;" VBox.vgrow="ALWAYS">
+            <VBox alignment="CENTER" style="-fx-padding: 40 0 20 0;">
                 <ImageView fx:id="logoImage"
                            fitWidth="160" fitHeight="50"
                            preserveRatio="true"/>
             </VBox>
 
-            <!-- MENU BUTTONS - equal spacing -->
-            <VBox spacing="4" style="-fx-padding: 20 16; -fx-min-height: 200;" VBox.vgrow="ALWAYS">
+            <VBox spacing="4" style="-fx-padding: 10 16 0 16;">
                 <Button fx:id="btnDashboard" maxWidth="Infinity" onAction="#navigasiDashboard"
                         style="-fx-background-color: transparent; -fx-background-radius: 8; -fx-padding: 12 16; -fx-cursor: hand;">
                     <graphic>
@@ -60,12 +58,13 @@
                 </Button>
             </VBox>
 
-            <!-- BUTTON KELUAR - equal spacing -->
-            <VBox alignment="CENTER" style="-fx-padding: 20 16; -fx-min-height: 100;" VBox.vgrow="ALWAYS">
+            <Region VBox.vgrow="ALWAYS"/>
+
+            <VBox style="-fx-padding: 0 16 30 16;">
                 <Button maxWidth="Infinity" onAction="#klikKeluar"
                         style="-fx-background-color: #00e5a0; -fx-background-radius: 8; -fx-padding: 12 16; -fx-cursor: hand;">
                     <graphic>
-                        <HBox spacing="12" alignment="CENTER_LEFT">
+                        <HBox spacing="12" alignment="CENTER" maxWidth="-Infinity" StackPane.alignment="CENTER">
                             <ImageView fx:id="iconKeluar" fitWidth="18" fitHeight="18" preserveRatio="true"/>
                             <Label text="Keluar" style="-fx-text-fill: #0a1f1f; -fx-font-size: 13; -fx-font-weight: bold;"/>
                         </HBox>

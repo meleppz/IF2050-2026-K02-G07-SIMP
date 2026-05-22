@@ -19,6 +19,7 @@ import java.util.Scanner;
  * File ini dinonaktifkan sementara untuk menghindari konflik saat transisi ke UI-based (MainApp).
  * Hapus komentar blok jika ingin menjalankan versi CLI kembali.
  */
+
 public class Main {
     public static void main(String[] args) {
         System.out.println("CLI Mode is currently disabled. Please run MainApp.java for the UI version.");

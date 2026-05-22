@@ -1,6 +1,7 @@
 package view;
 
 import javafx.scene.control.ProgressIndicator;
+import util.Session;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import controller.ProdukController;
@@ -34,6 +35,7 @@ public class EksporLaporanView {
     @FXML private VBox panelForm;
     @FXML private VBox panelLoading;
     @FXML private VBox panelHasil;
+    @FXML private VBox panelUhOh; // Panel baru untuk data kosong
 
     @FXML private TextField fieldCariProduk;
     @FXML private HBox listProdukHorizontal;
@@ -42,23 +44,22 @@ public class EksporLaporanView {
     @FXML private DatePicker fieldTglMulai;
     @FXML private DatePicker fieldTglSelesai;
     @FXML private ComboBox<String> comboFormat;
-    @FXML private ComboBox<String> comboFilterKategori; // Tambahkan ini
-    @FXML private Label lblNamaPengguna; // Tambahkan ini jika belum ada
+    @FXML private ComboBox<String> comboFilterKategori;
+    @FXML private Label lblNamaPengguna;
     @FXML private Button btn7Hari;
     @FXML private Button btn30Hari;
     @FXML private Button btn6Bulan;
     @FXML private Button btnSemuaData;
 
-    @FXML private ProgressIndicator progressBar; // Ganti ProgressBar jadi ProgressIndicator
+    @FXML private ProgressIndicator progressBar;
     @FXML private Label labelFormatHasil;
 
     private final ReportController reportController = new ReportController();
     private final FileGeneratorService fileGeneratorService = new FileGeneratorService();
-
+    private Session session = Session.getInstance();
     private List<Produk> semuaProduk = new ArrayList<>();
     private final List<Integer> idProdukTerpilih = new ArrayList<>();
     private boolean semuaProdukDipilih = false;
-
     private Button shortcutAktif = null;
     private Path tempFilePath = null;
     private String formatTerpilih = "pdf";
@@ -70,13 +71,12 @@ public class EksporLaporanView {
 
     @FXML
     public void initialize() {
+        setupHeaderUser();
         tampilkanPanel(panelForm);
         setupComboBoxFormat();
 
-        // Ambil data produk menggunakan produkController
         semuaProduk = produkController.getAllProduk();
 
-        // --- TAMBAHKAN LOGIKA FILTER KATEGORI DI SINI ---
         if (comboFilterKategori != null) {
             ObservableList<String> listKategori = FXCollections.observableArrayList("Semua Kategori");
             semuaProduk.stream()
@@ -85,18 +85,13 @@ public class EksporLaporanView {
                     .forEach(listKategori::add);
             comboFilterKategori.setItems(listKategori);
             comboFilterKategori.getSelectionModel().selectFirst();
-
-            // Listener jika kategori diubah
             comboFilterKategori.setOnAction(e -> filterProduk(fieldCariProduk.getText()));
         }
-        // ------------------------------------------------
 
         tampilkanListProduk(semuaProduk);
 
         fieldCariProduk.textProperty().addListener((obs, lama, baru) -> {
-            if (fieldCariProduk.isFocused()) {
-                filterProduk(baru);
-            }
+            if (fieldCariProduk.isFocused()) filterProduk(baru);
         });
 
         fieldTglMulai.valueProperty().addListener(dateChangeListener);
@@ -161,7 +156,6 @@ public class EksporLaporanView {
         nama.setMaxWidth(120);
         nama.setAlignment(Pos.CENTER);
 
-        // ✅ ID Produk & Kode (agar konsisten dengan page Produk)
         String kodeLabel = produk.getKode() != null ? produk.getKode() : "-";
         Label infoLabel = new Label("ID: " + produk.getIdProduk() + " | " + kodeLabel);
         infoLabel.setStyle("-fx-text-fill: #00e5a0; -fx-font-size: 10;");
@@ -176,10 +170,7 @@ public class EksporLaporanView {
                 semuaProdukDipilih = false;
                 btnSemuaProduk.setStyle(styleBtn(false));
             }
-            // Update teks pencarian hanya jika tidak sedang fokus mengetik
-            if (!fieldCariProduk.isFocused()) {
-                updateTextFieldStatus();
-            }
+            if (!fieldCariProduk.isFocused()) updateTextFieldStatus();
         });
 
         item.setOnMouseClicked(e -> cb.setSelected(!cb.isSelected()));
@@ -201,22 +192,17 @@ public class EksporLaporanView {
         }
     }
 
-    // ✅ Fitur Search Multi-Kriteria (Nama, ID, Kode, Kategori)
     private void filterProduk(String keyword) {
         String kw = (keyword == null) ? "" : keyword.toLowerCase();
         String kategoriTerpilih = (comboFilterKategori != null) ? comboFilterKategori.getValue() : "Semua Kategori";
 
         List<Produk> hasil = semuaProduk.stream()
                 .filter(p -> {
-                    // Filter Keyword
                     boolean cocokKeyword = p.getNama().toLowerCase().contains(kw) ||
                             String.valueOf(p.getIdProduk()).contains(kw) ||
                             (p.getKode() != null && p.getKode().toLowerCase().contains(kw));
-
-                    // Filter Kategori
                     String katProduk = p.getKategori() != null ? p.getKategori().getNamaKategori() : "-";
                     boolean cocokKategori = kategoriTerpilih.equals("Semua Kategori") || katProduk.equals(kategoriTerpilih);
-
                     return cocokKeyword && cocokKategori;
                 })
                 .toList();
@@ -238,7 +224,6 @@ public class EksporLaporanView {
         tampilkanListProduk(semuaProduk);
     }
 
-    // --- Logika Shortcut Tanggal & Buat Laporan Tetap Sama ---
     @FXML public void klik7Hari()    { terapkanShortcut(btn7Hari, 7); }
     @FXML public void klik30Hari()   { terapkanShortcut(btn30Hari, 30); }
     @FXML public void klik6Bulan()   { terapkanShortcut(btn6Bulan, 180); }
@@ -274,17 +259,37 @@ public class EksporLaporanView {
         final LocalDate tglMulai = fieldTglMulai.getValue();
         final LocalDate tglSelesai = fieldTglSelesai.getValue();
 
-        Task<Path> task = new Task<>() {
-            @Override protected Path call() throws Exception {
+        Task<LaporanProduksi> task = new Task<>() {
+            @Override protected LaporanProduksi call() throws Exception {
                 updateProgress(2, 10);
                 LaporanProduksi laporan = reportController.susunLaporan(idList, tglMulai, tglSelesai);
                 updateProgress(6, 10);
-                return fileGeneratorService.generate(laporan, formatTerpilih);
+                return laporan;
             }
         };
 
         progressBar.progressProperty().bind(task.progressProperty());
-        task.setOnSucceeded(e -> { tempFilePath = task.getValue(); tampilkanHasil(); });
+
+        task.setOnSucceeded(e -> {
+            LaporanProduksi laporan = task.getValue();
+
+            // Cek apakah data produksi tersedia
+            if (laporan.getBarisTabel().isEmpty()) {
+                tampilkanPanel(panelUhOh);
+                return;
+            }
+
+            // Ada data — lanjut generate file
+            Task<Path> taskGenerate = new Task<>() {
+                @Override protected Path call() throws Exception {
+                    return fileGeneratorService.generate(laporan, formatTerpilih);
+                }
+            };
+            taskGenerate.setOnSucceeded(ev -> { tempFilePath = taskGenerate.getValue(); tampilkanHasil(); });
+            taskGenerate.setOnFailed(ev -> { tampilkanPanel(panelForm); tampilkanError("Gagal ekspor: " + taskGenerate.getException().getMessage()); });
+            new Thread(taskGenerate).start();
+        });
+
         task.setOnFailed(e -> { tampilkanPanel(panelForm); tampilkanError("Gagal ekspor: " + task.getException().getMessage()); });
         new Thread(task).start();
     }
@@ -314,11 +319,26 @@ public class EksporLaporanView {
         nonaktifkanShortcut(); tampilkanListProduk(semuaProduk); tampilkanPanel(panelForm);
     }
 
+    // Dipanggil dari tombol "Kembali" di panelUhOh — reuse method yang sama
+    @FXML
+    public void klikKembaliDariUhOh() {
+        tampilkanPanel(panelForm);
+    }
+
     private void tampilkanPanel(VBox panel) {
         panelForm.setVisible(false); panelForm.setManaged(false);
         panelLoading.setVisible(false); panelLoading.setManaged(false);
         panelHasil.setVisible(false); panelHasil.setManaged(false);
+        panelUhOh.setVisible(false); panelUhOh.setManaged(false);
         panel.setVisible(true); panel.setManaged(true);
+    }
+    private void setupHeaderUser() {
+        if (session.isLoggedIn()) {
+            String peran = session.getPenggunaAktif().getPeran().toString();
+            lblNamaPengguna.setText(peran);
+        } else {
+            lblNamaPengguna.setText("Guest");
+        }
     }
 
     private void tampilkanHasil() { labelFormatHasil.setText(formatTerpilih.toUpperCase()); tampilkanPanel(panelHasil); }
