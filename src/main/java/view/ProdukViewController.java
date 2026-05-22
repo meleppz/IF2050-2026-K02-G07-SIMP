@@ -19,11 +19,13 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import model.Produk;
-import model.TargetProduksi;
+import service.StatistikService;
 import util.Session;
 
 import java.io.IOException;
 import java.time.LocalDate;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public class ProdukViewController {
@@ -43,6 +45,11 @@ public class ProdukViewController {
     private ProdukController produkController;
     private Integer idProdukSedangDiedit = null;
     private Dialog<ButtonType> dialogDetail = null;
+
+    // ✅ Instance StatistikService untuk menghitung performa
+    private StatistikService statistikService = new StatistikService();
+
+    // ✅ Session untuk permission check
     private Session session = Session.getInstance();
 
     // Menggunakan ObservableList agar filter & sort bisa real-time
@@ -62,6 +69,9 @@ public class ProdukViewController {
 
         // 2. Setup Dropdown Filter Kategori (Ambil unik dari data yang ada)
         setupFilterKategori();
+        if (comboFilterKategori != null) {
+            comboFilterKategori.setOnAction(e -> jalankanFilterDanSort());
+        }
 
         // 3. Setup Dropdown Sorting
         if (comboSortProduk != null) {
@@ -90,14 +100,13 @@ public class ProdukViewController {
                 .forEach(listKategori::add);
 
         comboFilterKategori.setItems(listKategori);
-        comboFilterKategori.getSelectionModel().selectFirst();
-        comboFilterKategori.setOnAction(e -> jalankanFilterDanSort());
+        // Don't change selection or set action listener here to avoid triggering filter/sort
     }
 
     // FUNGSI INTI: Menggabungkan Search + Filter Kategori + Sorting
     private void jalankanFilterDanSort() {
         String keyword = fieldCariProduk.getText().toLowerCase();
-        String kategoriSelected = comboFilterKategori != null ? comboFilterKategori.getValue() : "Semua Kategori";
+        String kategoriSelected = comboFilterKategori != null && comboFilterKategori.getValue() != null ? comboFilterKategori.getValue() : "Semua Kategori";
 
         // A. Proses Filtering
         filteredProduk.setPredicate(produk -> {
@@ -158,7 +167,7 @@ public class ProdukViewController {
     // Helper untuk merefresh data setelah Simpan/Hapus
     private void refreshDataSetelahAksi() {
         masterDataProduk.setAll(produkController.getAllProduk());
-        setupFilterKategori(); // Update kategori barangkali ada kategori baru
+        updateFilterKategori(); // Update kategori tanpa trigger action listener
         jalankanFilterDanSort();
     }
 
@@ -206,7 +215,14 @@ public class ProdukViewController {
         Label kategori = new Label(produk.getKategori() != null ? produk.getKategori().getNamaKategori() : "-");
         kategori.setStyle("-fx-background-color: #1e3a3a; -fx-text-fill: #00e5a0; -fx-font-size: 11; -fx-background-radius: 20; -fx-padding: 2 10;");
 
-        info.getChildren().addAll(nama, kategori);
+        // ✅ Hitung performa produk (30 hari terakhir)
+        Map<String, Object> performaData = statistikService.getPerforma30Hari(produk.getIdProduk(), LocalDate.now());
+        double rataRataPerforma = (Double) performaData.get("rataRataPerforma");
+        String performaText = "Performa: " + String.format("%.0f%%", rataRataPerforma);
+        Label performa = new Label(performaText);
+        performa.setStyle("-fx-text-fill: #5a8a8a; -fx-font-size: 12;");
+
+        info.getChildren().addAll(nama, kategori, performa);
         baris.getChildren().addAll(fotoContainer, info);
         card.getChildren().add(baris);
         card.setOnMouseClicked(e -> pilihProduk(produk.getIdProduk()));
@@ -281,34 +297,61 @@ public class ProdukViewController {
     }
 
     private void simpanDariForm(FormProdukController formCtrl) {
-        // Tetap pakai konfirmasi asli kamu
+        // 1. Konfirmasi awal
         if (!konfirmasiAksi("Simpan perubahan?")) return;
 
-        String kategoriInput = formCtrl.getKategoriInput();
-        if (kategoriInput.isEmpty()) {
+        // ✅ Validasi Kategori
+        String rawKategori = formCtrl.getKategoriInput();
+        if (rawKategori == null || rawKategori.trim().isEmpty()) {
             tampilkanPesan("Kategori wajib diisi!");
             return;
         }
+        String kategoriInput = formatKategori(rawKategori);
 
+        // ✅ Ambil data dasar (Nama, Kode, Satuan)
         var data = formCtrl.ambilInputProduk();
         if (data == null) {
             tampilkanPesan("Nama, kode, dan satuan wajib diisi!");
             return;
         }
 
+        // ——— VALIDASI SATUAN (TIDAK BOLEH ADA ANGKA) ———
+        // Regex ".*\\d.*" artinya: cek apakah ada digit (0-9) di sepanjang string
+        if (data.getSatuan() != null && data.getSatuan().matches(".*\\d.*")) {
+            tampilkanPesan("Satuan tidak boleh mengandung angka (misal: gunakan 'Lusin', bukan '12pcs')!");
+            return;
+        }
+        // ——— SELESAI VALIDASI SATUAN ———
+
+        // ✅ Pengecekan Target Produksi
+        String targetStr = formCtrl.getTargetInput();
+        int jumlahTarget = 0;
+
+        if (idProdukSedangDiedit == null) {
+            if (targetStr.isEmpty()) {
+                tampilkanPesan("Target produksi wajib diisi!");
+                return;
+            }
+            try {
+                jumlahTarget = Integer.parseInt(targetStr);
+                if (jumlahTarget < 1) {
+                    tampilkanPesan("Target produksi harus lebih dari 0!");
+                    return;
+                }
+            } catch (NumberFormatException e) {
+                tampilkanPesan("Target produksi harus berupa angka!");
+                return;
+            }
+        }
+
+        // ✅ Eksekusi Simpan ke Database
         try {
             if (idProdukSedangDiedit == null) {
                 Produk hasil = produkController.tambahProduk(data, kategoriInput);
                 if (hasil != null && hasil.getIdProduk() != 0) {
-                    String targetStr = formCtrl.getTargetInput();
-                    if (!targetStr.isEmpty()) {
-                        int jumlahTarget = Integer.parseInt(targetStr);
-                        // Sesuaikan parameter constructor TargetProduksi kamu di sini
-                        model.TargetProduksi target = new model.TargetProduksi(
-                                hasil.getIdProduk(), "000000", jumlahTarget, 1
-                        );
-                        produkController.tambahTarget(target);
-                    }
+                    produkController.tambahTarget(new model.TargetProduksi(
+                            hasil.getIdProduk(), "000000", jumlahTarget, 1
+                    ));
                 } else {
                     tampilkanPesan("Gagal menyimpan produk!");
                     return;
@@ -325,7 +368,6 @@ public class ProdukViewController {
             return;
         }
 
-        // Menutup window form dengan cara yang lebih aman
         formCtrl.fieldNamaProduk.getScene().getWindow().hide();
         refreshDataSetelahAksi();
     }
@@ -341,5 +383,26 @@ public class ProdukViewController {
         alert.setHeaderText(aksi);
         Optional<ButtonType> result = alert.showAndWait();
         return result.isPresent() && result.get() == ButtonType.OK;
+    }
+
+    private String formatKategori(String input) {
+        if (input == null || input.trim().isEmpty()) return "";
+        String trimed = input.trim().toLowerCase();
+        // Mengubah huruf pertama jadi kapital, sisanya kecil
+        return trimed.substring(0, 1).toUpperCase() + trimed.substring(1);
+    }
+
+    private void updateFilterKategori() {
+        if (comboFilterKategori == null) return;
+
+        ObservableList<String> listKategori = FXCollections.observableArrayList("Semua Kategori");
+        // Ambil nama kategori unik dari master data produk
+        masterDataProduk.stream()
+                .map(p -> p.getKategori() != null ? p.getKategori().getNamaKategori() : "-")
+                .distinct()
+                .forEach(listKategori::add);
+
+        comboFilterKategori.setItems(listKategori);
+        // Don't change selection or set action listener here to avoid triggering filter/sort
     }
 }

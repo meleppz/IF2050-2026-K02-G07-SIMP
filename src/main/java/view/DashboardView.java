@@ -407,8 +407,18 @@ public class DashboardView extends BorderPane {
         lblGrafik.setStyle("-fx-text-fill: " + TEXT_WHITE + ";");
         grafikHeader.getChildren().addAll(lblGrafikIcon, lblGrafik);
 
-        grafikCanvas = new Canvas(650, 220);
-        grafikCard.getChildren().addAll(grafikHeader, grafikCanvas);
+        // Ganti Canvas dengan StackPane yang lebih responsive
+        StackPane canvasContainer = new StackPane();
+        canvasContainer.setStyle("-fx-background-color: " + BG_CARD + ";");
+        canvasContainer.setMinHeight(250);
+        canvasContainer.setPrefHeight(250);
+
+        grafikCanvas = new Canvas();
+        grafikCanvas.setWidth(650);
+        grafikCanvas.setHeight(220);
+
+        canvasContainer.getChildren().add(grafikCanvas);
+        grafikCard.getChildren().addAll(grafikHeader, canvasContainer);
 
         // Top & Worst Performing
         topPerformingBox  = new VBox(0);
@@ -532,7 +542,8 @@ public class DashboardView extends BorderPane {
         VBox card = new VBox(12);
         card.setPadding(new Insets(16));
         card.setStyle("-fx-background-color: " + BG_CARD + "; -fx-background-radius: 12;");
-        VBox.setVgrow(card, Priority.ALWAYS);
+        card.setMaxHeight(Region.USE_COMPUTED_SIZE);
+        VBox.setVgrow(card, Priority.NEVER);
 
         HBox header = new HBox(8);
         header.setAlignment(Pos.CENTER_LEFT);

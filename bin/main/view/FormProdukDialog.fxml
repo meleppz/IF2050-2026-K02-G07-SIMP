@@ -78,7 +78,7 @@
     </VBox>
 
     <VBox spacing="6">
-        <Label text="Target Produksi per Hari"
+        <Label text="Target Produksi per Bulan"
                style="-fx-text-fill: white; -fx-font-size: 13;"/>
         <TextField fx:id="fieldTargetPerBulan"
                    promptText="Jumlah target..."

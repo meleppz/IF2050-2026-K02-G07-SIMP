@@ -8,10 +8,10 @@
            fx:controller="view.EksporLaporanView"
            style="-fx-background-color: #0a1f1f;">
 
-    <ScrollPane fitToWidth="true" style="-fx-background: transparent; -fx-background-color: transparent; -fx-padding: 0;">
-        <VBox fx:id="panelForm" spacing="25" style="-fx-padding: 32 32 80 32;">
+    <ScrollPane fitToWidth="true" style="-fx-background: transparent; -fx-background-color: transparent;">
+        <VBox fx:id="panelForm" spacing="25" style="-fx-padding: 30;">
 
-            <HBox alignment="CENTER_LEFT" spacing="16">
+            <HBox alignment="CENTER_LEFT">
                 <Label text="Ekspor Laporan Produksi" style="-fx-text-fill: #00e5a0; -fx-font-size: 26; -fx-font-weight: bold;"/>
                 <Region HBox.hgrow="ALWAYS" />
                 <VBox alignment="CENTER_RIGHT" spacing="2">
@@ -29,7 +29,7 @@
                 </HBox>
 
                 <HBox spacing="12">
-                    <StackPane HBox.hgrow="ALWAYS" minWidth="200">
+                    <StackPane HBox.hgrow="ALWAYS">
                         <TextField fx:id="fieldCariProduk" promptText="Cari nama atau kode produk..."
                                    style="-fx-background-color: #0a1f1f; -fx-text-fill: white; -fx-padding: 10 40 10 15; -fx-background-radius: 12; -fx-border-color: #1e3a3a; -fx-border-radius: 12;"/>
                         <ImageView fitWidth="16" fitHeight="16" preserveRatio="true" StackPane.alignment="CENTER_RIGHT">
@@ -38,21 +38,21 @@
                         </ImageView>
                     </StackPane>
 
-                    <ComboBox fx:id="comboFilterKategori" promptText="Semua Kategori" minWidth="150"
+                    <ComboBox fx:id="comboFilterKategori" promptText="Semua Kategori" prefWidth="200"
                               style="-fx-background-color: #132929; -fx-text-fill: white; -fx-text-base-color: white; -fx-background-radius: 8; -fx-padding: 8;"/>
                 </HBox>
 
-                <ScrollPane fitToHeight="true" vbarPolicy="NEVER" hbarPolicy="AS_NEEDED" minHeight="120"
-                            style="-fx-background-color: #132929; -fx-text-fill: white; -fx-text-base-color: white; -fx-background-radius: 8; -fx-padding: 8;">
+                <ScrollPane fitToHeight="true" vbarPolicy="NEVER" hbarPolicy="AS_NEEDED"
+                            style="-fx-background-color: #132929; -fx-text-fill: white; -fx-text-base-color: white; -fx-background-radius: 8; -fx-padding: 8;"/>
                     <HBox fx:id="listProdukHorizontal" spacing="15" style="-fx-padding: 5 0;">
                     </HBox>
                 </ScrollPane>
             </VBox>
 
-            <HBox spacing="20" style="-fx-wrap-text: true;">
-                <VBox spacing="12" HBox.hgrow="ALWAYS" style="-fx-background-color: #132929; -fx-padding: 24; -fx-background-radius: 16; -fx-border-color: #1e3a3a; -fx-border-radius: 16; -fx-min-width: 300;">
+            <HBox spacing="20">
+                <VBox spacing="12" HBox.hgrow="ALWAYS" style="-fx-background-color: #132929; -fx-padding: 24; -fx-background-radius: 16; -fx-border-color: #1e3a3a; -fx-border-radius: 16;">
                     <Label text="2. Rentang Waktu" style="-fx-text-fill: white; -fx-font-size: 16; -fx-font-weight: bold;"/>
-                    <HBox spacing="8" style="-fx-wrap-text: true;">
+                    <HBox spacing="8">
                         <Button fx:id="btn7Hari" text="7 Hari" onAction="#klik7Hari" style="-fx-background-color: #1e3a3a; -fx-text-fill: white; -fx-background-radius: 20; -fx-padding: 6 15; -fx-cursor: hand;"/>
                         <Button fx:id="btn30Hari" text="30 Hari" onAction="#klik30Hari" style="-fx-background-color: #1e3a3a; -fx-text-fill: white; -fx-background-radius: 20; -fx-padding: 6 15; -fx-cursor: hand;"/>
                         <Button fx:id="btn6Bulan" text="6 Bulan" onAction="#klik6Bulan" style="-fx-background-color: #1e3a3a; -fx-text-fill: white; -fx-background-radius: 20; -fx-padding: 6 15; -fx-cursor: hand;"/>
@@ -70,7 +70,7 @@
                     </HBox>
                 </VBox>
 
-                <VBox spacing="12" minWidth="280" style="-fx-background-color: #132929; -fx-padding: 24; -fx-background-radius: 16; -fx-border-color: #1e3a3a; -fx-border-radius: 16;">
+                <VBox spacing="12" prefWidth="300" style="-fx-background-color: #132929; -fx-padding: 24; -fx-background-radius: 16; -fx-border-color: #1e3a3a; -fx-border-radius: 16;">
                     <Label text="3. Format Laporan" style="-fx-text-fill: white; -fx-font-size: 16; -fx-font-weight: bold;"/>
                     <Region VBox.vgrow="ALWAYS" />
                     <Label text="Pilih Ekstensi File" style="-fx-text-fill: #5a8a8a; -fx-font-size: 11;"/>

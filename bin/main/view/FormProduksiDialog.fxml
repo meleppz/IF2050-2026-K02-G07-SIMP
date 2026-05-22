@@ -102,6 +102,6 @@
     <Button text="Lanjut"
             maxWidth="Infinity"
             onAction="#simpanProduksi"
-            style="-fx-background-color: #00e5a0; -fx-text-fill: #0a1f1f; -fx-font-weight: bold; -fx-background-radius: 8; -fx-padding: 12; -fx-font-size: 14; -fx-cursor: hand;"/>
+            style="-fx-background-color: #00e5a0; -fx-text-fill: #0a1f1f; -fx-font-weight: bold; -fx-background-radius: 8; -fx-padding: 12; -fx-font-size: 14;"/>
 
 </VBox>

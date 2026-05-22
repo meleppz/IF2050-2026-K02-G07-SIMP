@@ -42,8 +42,7 @@ public class MainViewController {
         loadIcon(iconKeluar, "/images/icon_keluar.png");
 
         // default screen: Produk
-        navigasiBuatLaporan();
-        navigasiProduk();
+        navigasiDashboard();
     }
 
     @FXML
@@ -84,7 +83,7 @@ public class MainViewController {
 
             // 3. Tampilkan stage Login baru
             Stage loginStage = new Stage();
-            loginStage.setTitle("Login - SIMP");
+            loginStage.setTitle("SIMP");
             loginStage.setScene(new javafx.scene.Scene(root));
             loginStage.show();
 
