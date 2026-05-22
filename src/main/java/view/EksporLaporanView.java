@@ -1,6 +1,7 @@
 package view;
 
 import javafx.scene.control.ProgressIndicator;
+import util.Session;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import controller.ProdukController;
@@ -55,11 +56,10 @@ public class EksporLaporanView {
 
     private final ReportController reportController = new ReportController();
     private final FileGeneratorService fileGeneratorService = new FileGeneratorService();
-
+    private Session session = Session.getInstance();
     private List<Produk> semuaProduk = new ArrayList<>();
     private final List<Integer> idProdukTerpilih = new ArrayList<>();
     private boolean semuaProdukDipilih = false;
-
     private Button shortcutAktif = null;
     private Path tempFilePath = null;
     private String formatTerpilih = "pdf";
@@ -71,6 +71,7 @@ public class EksporLaporanView {
 
     @FXML
     public void initialize() {
+        setupHeaderUser();
         tampilkanPanel(panelForm);
         setupComboBoxFormat();
 
@@ -330,6 +331,14 @@ public class EksporLaporanView {
         panelHasil.setVisible(false); panelHasil.setManaged(false);
         panelUhOh.setVisible(false); panelUhOh.setManaged(false);
         panel.setVisible(true); panel.setManaged(true);
+    }
+    private void setupHeaderUser() {
+        if (session.isLoggedIn()) {
+            String peran = session.getPenggunaAktif().getPeran().toString();
+            lblNamaPengguna.setText(peran);
+        } else {
+            lblNamaPengguna.setText("Guest");
+        }
     }
 
     private void tampilkanHasil() { labelFormatHasil.setText(formatTerpilih.toUpperCase()); tampilkanPanel(panelHasil); }
