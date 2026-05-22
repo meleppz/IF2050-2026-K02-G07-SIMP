@@ -52,7 +52,7 @@ public class DetailProdukController {
 
         TargetProduksi target = produkController.getTargetAktif(idProduk, LocalDate.now());
         if (target != null) {
-            detailTarget.setText(target.getJumlahTarget() + " " + produk.getSatuan() + " per Bulan");
+            detailTarget.setText(target.getJumlahTarget() + " " + produk.getSatuan() + " per Hari");
             
             // ✅ Hitung performa menggunakan StatistikService (30 hari terakhir)
             Map<String, Object> performaData = statistikService.getPerforma30Hari(idProduk, LocalDate.now());
