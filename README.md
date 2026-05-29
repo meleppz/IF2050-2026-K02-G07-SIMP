@@ -21,6 +21,14 @@ Fitur utama
 - Penyusunan laporan periode (filter tanggal & produk) serta ekspor ke Excel/PDF.
 - History log untuk audit (CREATE / UPDATE / DELETE) dengan pencatatan NIK pengguna.
 
+Perubahan yang Dilakukan setelah Release Pertama
+-----------
+- Logika penyimpanan update data target pada produkViewController.
+- Tambah panel pesan eror ketika ekspor laporan produk yang tidak ada datanya.
+- Polishing UI yang masih berantakan (screen flexibility dan margin, pesan penyambut user pada screen ekspor laporan, header tabel produksi harian, gambar logo diubah jadi HD).
+- Fix eror saat klik menu Ekspor Laporan.
+- Fix data type query SQL.
+
 Struktur proyek (singkat)
 ------------------------
 - `src/main/java/`
